@@ -1,0 +1,50 @@
+{
+  "name": "VibeRide Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:22-bullseye",
+  "features": {
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "22"
+    },
+    "ghcr.io/devcontainers/features/ssh-agent:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
+  },
+  "postCreateCommand": "npm install && npx husky install || true && bash -c 'if ! command -v zsh >/dev/null 2>&1; then sudo apt-get update && sudo apt-get install -y zsh; fi && if ! command -v starship >/dev/null 2>&1; then curl -fsSL https://starship.rs/install.sh | bash -s -- -y; fi && mkdir -p ~/.config && starship preset gruvbox-rainbow -o ~/.config/starship.toml && grep -q \"starship init zsh\" ~/.zshrc 2>/dev/null || echo \"eval \\"\\$(starship init zsh)\\\"\" >> ~/.zshrc'",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "editor.formatOnSave": true,
+        "eslint.format.enable": true,
+        "eslint.validate": ["javascript", "typescript", "astro", "typescriptreact"],
+        "[astro]": {
+          "editor.defaultFormatter": "astro-build.astro-vscode"
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/zsh"
+          }
+        },
+        "terminal.integrated.fontFamily": "MesloLGS NF"
+      },
+      "extensions": [
+        "astro-build.astro-vscode",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "bierner.lit-html"
+      ]
+    }
+  },
+  "portsAttributes": {
+    "4321": {
+      "label": "Vite/Astro dev server",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Additional service",
+      "onAutoForward": "notify"
+    }
+  },
+  "forwardPorts": [4321, 3000],
+  "remoteUser": "node"
+}
