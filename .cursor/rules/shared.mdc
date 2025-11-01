@@ -3,9 +3,9 @@ description:
 globs: 
 alwaysApply: true
 ---
-# AI Rules for {app-name}
+# AI Rules for VibeRide
 
-{project-description}
+VibeRide is an online-first, responsive web application that helps motorcycle enthusiasts quickly transform simple trip notes into engaging, high-level itineraries and downloadable GPX 1.1 files. The MVP targets three core rider personas—weekend group riders, after-work short-loop riders, and long-trip tourers—providing them with an AI-assisted planning flow that starts from a plain-text note and ends with an itinerary ready for the road.
 
 ## Tech Stack
 
