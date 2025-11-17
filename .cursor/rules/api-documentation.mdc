@@ -1,0 +1,44 @@
+---
+globs: .ai/api/*
+alwaysApply: false
+---
+
+Keep in mind that viberide has it own schema called viberide.
+For development purposes authentication MUST have option to be disabled. it should be disabled when enviroment variable DEVENV is set to 'true'.
+
+## Implemented Endpoints
+
+### User Preferences
+
+#### GET /api/user/preferences
+Retrieves the current user's preferences.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Response:**
+- `200 OK`: Returns `UserPreferencesResponse`
+- `404 Not Found`: User has not set preferences yet
+- `401 Unauthorized`: Not authenticated
+- `500 Internal Server Error`: Server error
+
+#### PUT /api/user/preferences
+Creates or updates user preferences (upsert operation).
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Request Body:** `UpdateUserPreferencesRequest`
+```json
+{
+  "terrain": "paved" | "gravel" | "mixed",
+  "road_type": "scenic" | "twisty" | "highway",
+  "typical_duration_h": number (> 0, max 999.9),
+  "typical_distance_km": number (> 0, max 999999.9)
+}
+```
+
+**Response:**
+- `201 Created`: Preferences created for first time
+- `200 OK`: Preferences updated
+- `400 Bad Request`: Validation failed (see error details)
+- `401 Unauthorized`: Not authenticated
+- `500 Internal Server Error`: Server error

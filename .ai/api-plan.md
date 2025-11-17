@@ -1,5 +1,10 @@
 # REST API Plan for VibeRide
 
+## IMPORTANT
+
+Keep in mind that viberide has it own schema called viberide.
+For development purposes authentication MUST have option to be disabled. it should be disabled when enviroment variable DEVENV is set to 'true'.
+
 ## 1. Resources
 
 | Resource | Database Table | Description |
@@ -43,6 +48,8 @@
 - **Path**: `/api/user/preferences`
 - **Description**: Creates or updates user's riding preferences (upsert operation)
 - **Auth**: Required
+- **Headers**:
+  - `Content-Type: application/json` (required – requests with other content types are rejected)
 - **Request Body**:
   ```json
   {
@@ -69,17 +76,17 @@
   - `201` Created - Preferences created for first time
 - **Errors**:
   - `400` Bad Request - Validation errors
-    ```json
-    {
-      "error": "Validation failed",
-      "details": {
-        "terrain": "Must be one of: paved, gravel, mixed",
-        "typical_duration_h": "Must be greater than 0"
-      }
-    }
-    ```
+    - `error`: `"validation_failed"`
+    - `message`: `"Validation errors"`
+    - `details`: field-level messages (e.g. `"terrain": "Invalid enum value. Expected 'paved' | 'gravel' | 'mixed'"`)
+  - `400` Bad Request - Missing or malformed JSON (`error`: `"invalid_json"` or `"invalid_content_type"`)
   - `401` Unauthorized - Not authenticated
-  - `500` Internal Server Error
+  - `500` Internal Server Error (`error`: `"user_preferences.upsert_failed"` or `"server_error"`)
+- **Logging**: Failures are routed through the shared `logger.error({ err, userId }, message)` helper.
+- **Validation**: Enforced with Zod schema (`updateUserPreferencesSchema`) – ensures positive numeric ranges (`<= 999.9` hours, `<= 999_999.9` km) and enum safety.
+- **Tests**:
+  - Unit tests cover schema parsing and service error handling (`src/lib/validators/userPreferences.test.ts`, `src/lib/services/userPreferencesService.test.ts`).
+  - Integration test exercises the Astro route happy path and error conditions (`src/pages/api/user/preferences.test.ts`).
 
 ---
 
