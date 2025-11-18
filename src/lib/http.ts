@@ -36,4 +36,3 @@ export function errorResponse(
 
   return jsonResponse(status, errorBody);
 }
-

@@ -28,4 +28,3 @@ export const updateUserPreferencesSchema = z.object({
 });
 
 export type UpdateUserPreferencesInput = z.infer<typeof updateUserPreferencesSchema>;
-

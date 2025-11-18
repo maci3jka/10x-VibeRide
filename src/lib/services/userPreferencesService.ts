@@ -60,11 +60,7 @@ export async function getUserPreferences(
   supabase: SupabaseClient,
   userId: string
 ): Promise<UserPreferencesResponse | null> {
-  const { data, error } = await supabase
-    .from("user_preferences")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
+  const { data, error } = await supabase.from("user_preferences").select("*").eq("user_id", userId).single();
 
   if (error) {
     // Return null if record doesn't exist (not an error case)
@@ -76,4 +72,3 @@ export async function getUserPreferences(
 
   return data as UserPreferencesResponse;
 }
-

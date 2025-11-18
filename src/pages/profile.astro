@@ -1,0 +1,17 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { ProfileScreen } from "@/components/ProfileScreen";
+import { Toaster } from "@/components/ui/sonner";
+
+// Check authentication - middleware should handle this, but double-check
+if (!Astro.locals.user) {
+  return Astro.redirect("/");
+}
+
+export const prerender = false;
+---
+
+<Layout title="Profile - VibeRide">
+  <ProfileScreen client:load />
+  <Toaster client:load />
+</Layout>

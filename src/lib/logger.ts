@@ -5,9 +5,7 @@
 
 type LogLevel = "info" | "warn" | "error" | "debug";
 
-interface LogContext {
-  [key: string]: unknown;
-}
+type LogContext = Record<string, unknown>;
 
 function log(level: LogLevel, context: LogContext, message: string): void {
   const timestamp = new Date().toISOString();
@@ -53,4 +51,3 @@ export const logger = {
   error: (context: LogContext, message: string) => log("error", context, message),
   debug: (context: LogContext, message: string) => log("debug", context, message),
 };
-
