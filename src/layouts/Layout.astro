@@ -1,11 +1,12 @@
 ---
 import "../styles/global.css";
+import { Toaster } from "../components/Toaster";
 
 interface Props {
   title?: string;
 }
 
-const { title = "10x Astro Starter" } = Astro.props;
+const { title = "VibeRide" } = Astro.props;
 ---
 
 <!doctype html>
@@ -19,6 +20,11 @@ const { title = "10x Astro Starter" } = Astro.props;
   </head>
   <body>
     <slot />
+    <Toaster client:load />
+    <script>
+      import { setupAuthListener } from "../lib/auth";
+      setupAuthListener();
+    </script>
   </body>
 </html>
 

@@ -21,6 +21,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.1.2",
     "@radix-ui/react-switch": "^1.2.6",
+    "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.78.0",
     "@tailwindcss/vite": "^4.1.13",
     "@types/react": "^19.1.12",

@@ -85,6 +85,8 @@ The app will be available at `http://localhost:4321`.
 | `npm run lint` | Run ESLint |
 | `npm run lint:fix` | Auto-fix lint errors |
 | `npm run format` | Format codebase with Prettier |
+| `npm run test` | Run unit tests with Vitest |
+
 
 ## Project Scope
 ### In Scope (MVP)

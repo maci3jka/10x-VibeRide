@@ -1,11 +1,19 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import { ProfileScreen } from "@/components/ProfileScreen";
-import { Toaster } from "@/components/ui/sonner";
 
-// Check authentication - middleware should handle this, but double-check
+/**
+ * Profile page - User preferences management
+ * 
+ * Protected route: requires authentication
+ * In DEVENV mode, uses default user from middleware
+ */
+
+// Check authentication
 if (!Astro.locals.user) {
-  return Astro.redirect("/");
+  // Preserve intended destination for post-login redirect (US-014)
+  const returnTo = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+  return Astro.redirect(`/?returnTo=${returnTo}`);
 }
 
 export const prerender = false;
@@ -13,5 +21,4 @@ export const prerender = false;
 
 <Layout title="Profile - VibeRide">
   <ProfileScreen client:load />
-  <Toaster client:load />
 </Layout>

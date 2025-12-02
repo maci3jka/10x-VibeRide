@@ -84,11 +84,11 @@ export function useProfileState() {
    */
   const updateField = useCallback((field: keyof PreferencesFormValues, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-      // Clear error for this field
-      setErrors((prev) => {
-        const { [field]: _, ...rest } = prev;
-        return rest;
-      });
+    // Clear error for this field
+    setErrors((prev) => {
+      const { [field]: _, ...rest } = prev;
+      return rest;
+    });
   }, []);
 
   /**

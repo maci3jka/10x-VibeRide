@@ -1,0 +1,117 @@
+---
+/**
+ * OAuth Callback Handler
+ * 
+ * Receives OAuth callback from Google via Supabase
+ * Exchanges authorization code for session
+ * Redirects to appropriate post-login destination:
+ * - /profile if user preferences incomplete (US-002)
+ * - returnTo URL if provided (US-014)
+ * - /notes as default
+ */
+
+const code = Astro.url.searchParams.get("code");
+const error = Astro.url.searchParams.get("error");
+const returnTo = Astro.url.searchParams.get("returnTo");
+
+// Handle OAuth errors from provider
+if (error) {
+  console.error("OAuth provider error:", error);
+  return Astro.redirect(`/?error=${error}`);
+}
+
+// Validate code parameter
+if (!code || typeof code !== "string") {
+  console.error("Missing or invalid code parameter");
+  return Astro.redirect("/?error=missing_code");
+}
+
+try {
+  const supabase = Astro.locals.supabase;
+
+  // Exchange code for session (PKCE validation happens automatically)
+  const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (exchangeError) {
+    console.error("Token exchange failed:", exchangeError);
+    return Astro.redirect("/?error=auth_failed");
+  }
+
+  const userId = data.session.user.id;
+
+  // Check if user preferences exist
+  const { data: preferences, error: prefsError } = await supabase
+    .from("user_preferences")
+    .select("user_id")
+    .eq("user_id", userId)
+    .single();
+
+  if (prefsError && prefsError.code !== "PGRST116") {
+    // PGRST116 = no rows returned (expected for new users)
+    console.error("Error checking user preferences:", prefsError, { userId });
+  }
+
+  // Redirect based on profile completion and returnTo parameter
+  if (!preferences) {
+    // New user must complete profile first (US-002)
+    console.log("New user, redirecting to profile", { userId });
+    return Astro.redirect("/profile");
+  }
+
+  // Existing user: redirect to intended destination or default to /notes
+  if (returnTo) {
+    console.log("Existing user, redirecting to returnTo", { userId, returnTo });
+    return Astro.redirect(decodeURIComponent(returnTo));
+  }
+
+  console.log("Existing user, redirecting to notes", { userId });
+  return Astro.redirect("/notes");
+} catch (err) {
+  console.error("Unexpected error in OAuth callback:", err);
+  return Astro.redirect("/?error=server_error");
+}
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Signing in...</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        font-family: system-ui, -apple-system, sans-serif;
+        margin: 0;
+        background: hsl(var(--background));
+        color: hsl(var(--foreground));
+      }
+      .container {
+        text-align: center;
+      }
+      .spinner {
+        width: 40px;
+        height: 40px;
+        margin: 0 auto 1rem;
+        border: 4px solid hsl(var(--muted));
+        border-top-color: hsl(var(--primary));
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="spinner"></div>
+      <p>Signing you in...</p>
+    </div>
+  </body>
+</html>

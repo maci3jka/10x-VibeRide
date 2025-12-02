@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Settings } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 import { useProfileState } from "@/lib/hooks/useProfileState";
 import { PreferencesForm } from "@/components/PreferencesForm";
 import { SaveButton } from "@/components/SaveButton";
@@ -8,6 +8,7 @@ import { TabBar } from "@/components/TabBar";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { AppSettingsSheet } from "@/components/AppSettingsSheet";
 import { ConflictDialog } from "@/components/ConflictDialog";
+import { SignOutDialog } from "@/components/SignOutDialog";
 import { Button } from "@/components/ui/button";
 import type { UserPreferencesResponse } from "@/types";
 
@@ -20,6 +21,7 @@ export function ProfileScreen() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [conflictData, setConflictData] = useState<UserPreferencesResponse | null>(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
 
   // Monitor online status
   useEffect(() => {
@@ -131,6 +133,27 @@ export function ProfileScreen() {
                 </p>
                 <SaveButton disabled={isSaveDisabled} state={status} onClick={handleSave} />
               </div>
+
+              {/* Account Section */}
+              <div className="space-y-4 border-t pt-6">
+                <h2 className="text-xl font-semibold">Account</h2>
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Sign Out</p>
+                    <p className="text-sm text-muted-foreground">
+                      Sign out of your account
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowSignOutDialog(true)}
+                    className="gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -151,6 +174,9 @@ export function ProfileScreen() {
           onReload={handleConflictReload}
         />
       )}
+
+      {/* Sign Out Dialog */}
+      <SignOutDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog} />
     </>
   );
 }

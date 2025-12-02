@@ -1,8 +1,30 @@
 ---
-import Welcome from "../components/Welcome.astro";
 import Layout from "../layouts/Layout.astro";
+import { LandingPage } from "../components/LandingPage";
+
+/**
+ * Landing page with authentication
+ * Handles OAuth errors and return URL preservation
+ *
+ * Behavior:
+ * - Authenticated users are redirected to /notes (US-014)
+ * - Unauthenticated users see the landing page with sign-in CTA
+ * - OAuth errors are displayed via error banner
+ */
+
+// Check if user is already authenticated
+const user = Astro.locals.user;
+
+if (user) {
+  // Redirect authenticated users to notes page
+  return Astro.redirect("/notes");
+}
+
+// Extract query parameters for unauthenticated users
+const error = Astro.url.searchParams.get("error");
+const returnTo = Astro.url.searchParams.get("returnTo");
 ---
 
-<Layout>
-  <Welcome />
+<Layout title="Welcome to VibeRide">
+  <LandingPage error={error} returnTo={returnTo} client:load />
 </Layout>

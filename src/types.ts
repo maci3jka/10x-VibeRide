@@ -510,3 +510,84 @@ export function isTerminalStatus(status: ItineraryStatus): boolean {
 export function isCancellable(status: ItineraryStatus): boolean {
   return ["pending", "running"].includes(status);
 }
+
+// ============================================================================
+// 8. OPENROUTER SERVICE TYPES
+// ============================================================================
+
+/**
+ * JSON Schema format for structured LLM responses
+ * Used to enforce response structure from OpenRouter API
+ */
+export interface JsonSchemaFormat {
+  name: string; // Human-readable schema name
+  strict: boolean; // Whether to enforce strict validation (recommended: true)
+  schema: Record<string, unknown>; // JSON Schema object
+}
+
+/**
+ * Parameters for chat completion requests
+ */
+export interface ChatParams {
+  systemMessage?: string; // Optional system message to set context
+  userMessage: string; // Required user message/prompt
+  responseFormat?: JsonSchemaFormat; // Optional JSON schema enforcement
+  model: string; // Model identifier (e.g., "openrouter/gpt-4o")
+  modelParams?: Partial<{
+    temperature: number; // Randomness (0-2, default: 1)
+    max_tokens: number; // Maximum tokens in response
+    top_p: number; // Nucleus sampling (0-1, default: 1)
+    frequency_penalty: number; // Penalize frequent tokens (-2 to 2, default: 0)
+    presence_penalty: number; // Penalize repeated topics (-2 to 2, default: 0)
+  }>;
+  stream?: boolean; // Whether to stream response (default: false)
+}
+
+/**
+ * Response from a non-streamed chat completion
+ */
+export interface ChatResponse {
+  content: string; // The generated text response
+  model: string; // Model that generated the response
+  usage?: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
+  finish_reason?: string; // Reason completion stopped (e.g., "stop", "length")
+}
+
+/**
+ * Chunk from a streamed chat completion
+ */
+export interface ChatStreamChunk {
+  content: string; // Incremental content delta
+  finish_reason?: string; // Present on final chunk
+  model?: string; // Present on first chunk
+}
+
+/**
+ * OpenRouter API request payload structure
+ * Internal type for building API requests
+ */
+export interface OpenRouterPayload {
+  model: string;
+  messages: {
+    role: "system" | "user" | "assistant";
+    content: string;
+  }[];
+  response_format?: {
+    type: "json_schema";
+    json_schema: {
+      name: string;
+      strict: boolean;
+      schema: Record<string, unknown>;
+    };
+  };
+  temperature?: number;
+  max_tokens?: number;
+  top_p?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  stream?: boolean;
+}
