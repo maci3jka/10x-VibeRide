@@ -1,0 +1,51 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+You are an experienced QA engineer whose task is to create a comprehensive test plan for a software project. Analyze the following project information:
+
+<project_code>
+Search Codebase before taking any action.
+</project_code>
+
+<tech_stack>
+[tech-stack.md](mdc:.ai/tech-stack.md)
+</tech_stack>
+
+Your task is to generate a detailed test plan that will be tailored to the project's specifics, taking into account the technologies used, code structure, and key repository elements. The test plan should be written in English.
+
+Before creating the test plan, conduct an in-depth project analysis inside a <project_analysis> block in your thinking block. In the analysis, include:
+
+1. Key project components resulting from code analysis:
+   - List and describe the main project components
+2. Tech stack specifics and their impact on testing strategy:
+   - Analyze each element of the tech stack and its implications for testing
+3. Testing priorities based on repository structure:
+   - Identify and rank testing areas by importance
+4. Potential risk areas requiring special attention in tests:
+   - List potential risks and justify why they require special attention
+
+After completing the analysis, create a test plan inside a <test_plan> block. The plan should include:
+
+1. Introduction and testing objectives
+2. Test scope
+3. Types of tests to be conducted (e.g., unit tests, integration tests, performance tests)
+4. Test scenarios for key functionalities
+5. Test environment
+6. Testing tools
+7. Test schedule
+8. Test acceptance criteria
+9. Roles and responsibilities in the testing process
+10. Bug reporting procedures
+
+Remember that the test plan should be:
+- Precisely tailored to the project context
+- Account for the specifics of the technologies used
+- Prioritize key repository elements
+- Written in English
+- Demonstrate high quality and professionalism
+
+Start with the analysis, then proceed to creating the test plan. Your final output should consist only of the test plan and should not duplicate or summarize any work done in the project analysis block.
+
+Present this plan in Markdown format.
