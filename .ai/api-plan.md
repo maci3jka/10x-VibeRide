@@ -5,6 +5,41 @@
 Keep in mind that viberide has it own schema called viberide.
 For development purposes authentication MUST have option to be disabled. it should be disabled when enviroment variable DEVENV is set to 'true'.
 
+## Implementation Status
+
+| Endpoint | Method | Status | Implementation Date |
+|----------|--------|--------|---------------------|
+| `/api/user/preferences` | GET | ✅ Implemented | December 2024 |
+| `/api/user/preferences` | PUT | ✅ Implemented | December 2024 |
+| `/api/notes` | GET | ✅ Implemented | December 6, 2024 |
+| `/api/notes` | POST | ✅ Implemented | December 6, 2024 |
+| `/api/notes/:noteId` | GET | 🔲 Planned | - |
+| `/api/notes/:noteId` | PUT | 🔲 Planned | - |
+| `/api/notes/:noteId` | DELETE | 🔲 Planned | - |
+| `/api/notes/:noteId/archive` | POST | 🔲 Planned | - |
+| `/api/notes/:noteId/unarchive` | POST | 🔲 Planned | - |
+| `/api/notes/:noteId/itineraries` | GET | ✅ Implemented | December 6, 2024 |
+| `/api/notes/:noteId/itineraries` | POST | ✅ Implemented | December 6, 2024 |
+| `/api/itineraries/:itineraryId` | GET | ✅ Implemented | December 6, 2024 |
+| `/api/itineraries/:itineraryId` | DELETE | ✅ Implemented | December 6, 2024 |
+| `/api/itineraries/:itineraryId/status` | GET | ✅ Implemented | December 6, 2024 |
+| `/api/itineraries/:itineraryId/cancel` | POST | ✅ Implemented | December 6, 2024 |
+| `/api/itineraries/:itineraryId/gpx` | GET | ✅ Implemented | December 6, 2024 |
+| `/api/analytics/users/stats` | GET | 🔲 Planned | - |
+| `/api/analytics/generations/stats` | GET | 🔲 Planned | - |
+| `/api/health` | GET | 🔲 Planned | - |
+
+**Legend:**
+- ✅ Implemented - Fully implemented with tests
+- 🔲 Planned - Not yet implemented
+
+**Implementation Summary:**
+- **User Preferences**: Complete (GET, PUT) - Full CRUD with validation
+- **Notes**: Partial (GET list, POST create) - List with search/pagination, create with validation
+- **Itineraries**: Complete (GET by ID, GET list, POST generate, DELETE, GET status, POST cancel, GET gpx) - Full CRUD with generation, status polling, cancellation, and GPX download
+
+**Next Priority:** Complete Notes CRUD operations (GET by ID, PUT, DELETE, archive/unarchive)
+
 ## 1. Resources
 
 | Resource | Database Table | Description |
@@ -92,15 +127,18 @@ For development purposes authentication MUST have option to be disabled. it shou
 
 ### 2.2 Notes
 
+> **Implementation Reference:** See [`.ai/api/notes-implementation-summary.md`](.ai/api/notes-implementation-summary.md) for detailed implementation documentation, test coverage, and manual testing examples.
+
 #### List Notes
 - **Method**: `GET`
 - **Path**: `/api/notes`
 - **Description**: Retrieves paginated list of user's notes (excludes soft-deleted)
-- **Auth**: Required
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 6, 2024)
 - **Query Parameters**:
-  - `page` (integer, optional, default: 1) - Page number
+  - `page` (integer, optional, default: 1) - Page number (≥ 1)
   - `limit` (integer, optional, default: 20, max: 100) - Items per page
-  - `search` (string, optional) - Full-text search query
+  - `search` (string, optional, max: 250 chars) - Full-text search query
   - `archived` (boolean, optional, default: false) - Include archived notes
   - `sort` (string, optional, default: "updated_at") - Sort field: `updated_at`, `created_at`, `title`
   - `order` (string, optional, default: "desc") - Sort order: `asc`, `desc`
@@ -142,7 +180,14 @@ For development purposes authentication MUST have option to be disabled. it shou
 - **Errors**:
   - `401` Unauthorized - Not authenticated
   - `400` Bad Request - Invalid query parameters
+  - `404` Not Found - Requested page exceeds total pages
   - `500` Internal Server Error
+- **Implementation Details**:
+  - Validator: `src/lib/validators/notes.ts` (`listNotesQuerySchema`)
+  - Service: `src/lib/services/notesService.ts` (`listNotes()`)
+  - Route: `src/pages/api/notes/index.ts` (GET handler)
+  - Tests: 49 validator tests + 6 service tests (all passing)
+  - Features: Full-text search via `search_vector`, itinerary count aggregation, multi-field sorting
 
 #### Get Note by ID
 - **Method**: `GET`
@@ -190,7 +235,8 @@ For development purposes authentication MUST have option to be disabled. it shou
 - **Method**: `POST`
 - **Path**: `/api/notes`
 - **Description**: Creates a new trip note
-- **Auth**: Required
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 6, 2024)
 - **Request Body**:
   ```json
   {
@@ -204,6 +250,10 @@ For development purposes authentication MUST have option to be disabled. it shou
     }
   }
   ```
+- **Validation**:
+  - `title`: String, 1-120 characters, trimmed, required, unique per user
+  - `note_text`: String, 10-1500 characters, trimmed, required
+  - `trip_prefs`: Object, optional, all fields optional (inherits from user preferences)
 - **Response**:
   ```json
   {
@@ -229,21 +279,44 @@ For development purposes authentication MUST have option to be disabled. it shou
   ```
 - **Success**: `201` Created
 - **Errors**:
-  - `400` Bad Request - Validation errors
+  - `400` Bad Request - Validation errors or malformed JSON
     ```json
     {
-      "error": "Validation failed",
+      "error": "validation_failed",
+      "message": "Validation errors",
       "details": {
         "title": "Title is required and must not exceed 120 characters",
         "note_text": "Note text must not exceed 1500 characters",
         "trip_prefs.terrain": "Must be one of: paved, gravel, mixed"
-      }
+      },
+      "timestamp": "2025-01-15T10:30:00Z"
     }
     ```
   - `401` Unauthorized - Not authenticated
   - `403` Forbidden - User preferences not completed
+    ```json
+    {
+      "error": "preferences_incomplete",
+      "message": "User preferences must be set before creating notes",
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+    ```
   - `409` Conflict - Note with same title already exists for user
+    ```json
+    {
+      "error": "note_title_conflict",
+      "message": "A note with this title already exists",
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+    ```
   - `500` Internal Server Error
+- **Implementation Details**:
+  - Validator: `src/lib/validators/notes.ts` (`createNoteSchema`, `tripPreferencesSchema`)
+  - Service: `src/lib/services/notesService.ts` (`createNote()`)
+  - Route: `src/pages/api/notes/index.ts` (POST handler)
+  - Tests: 24 validator tests + 7 service tests (all passing)
+  - Prerequisites: Checks user preferences exist before allowing note creation
+  - Uniqueness: Database constraint on (user_id, title) WHERE deleted_at IS NULL
 
 #### Update Note
 - **Method**: `PUT`
@@ -349,13 +422,14 @@ For development purposes authentication MUST have option to be disabled. it shou
 #### List Itineraries for Note
 - **Method**: `GET`
 - **Path**: `/api/notes/:noteId/itineraries`
-- **Description**: Retrieves all itinerary versions for a specific note
-- **Auth**: Required
+- **Description**: Retrieves all itinerary versions for a specific note, ordered by version DESC (newest first)
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 6, 2024)
 - **Path Parameters**:
   - `noteId` (uuid, required) - Note identifier
 - **Query Parameters**:
-  - `status` (string, optional) - Filter by status: `pending`, `running`, `completed`, `failed`, `cancelled`
-  - `limit` (integer, optional, default: 20) - Number of results
+  - `status` (enum, optional) - Filter by status: `pending`, `running`, `completed`, `failed`, `cancelled`
+  - `limit` (integer, optional, default: 20, max: 100) - Number of results
 - **Request Body**: None
 - **Response**:
   ```json
@@ -364,6 +438,7 @@ For development purposes authentication MUST have option to be disabled. it shou
       {
         "itinerary_id": "uuid",
         "note_id": "uuid",
+        "user_id": "uuid",
         "version": 3,
         "status": "completed",
         "summary_json": {
@@ -398,73 +473,228 @@ For development purposes authentication MUST have option to be disabled. it shou
   ```
 - **Success**: `200` OK
 - **Errors**:
+  - `400` Bad Request - Invalid noteId format or query parameters
+    ```json
+    {
+      "error": "validation_failed",
+      "message": "Validation errors",
+      "details": {
+        "limit": "Limit cannot exceed 100"
+      },
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
   - `401` Unauthorized - Not authenticated
-  - `403` Forbidden - Note belongs to different user
-  - `404` Not Found - Note does not exist
+  - `403` Forbidden - Note belongs to different user (returns 404 for security)
+  - `404` Not Found - Note does not exist or has been deleted
+    ```json
+    {
+      "error": "note_not_found",
+      "message": "Note not found or has been deleted",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
   - `500` Internal Server Error
+- **Implementation Details**:
+  - Validator: `src/lib/validators/itinerary.ts` (`listItinerariesQuerySchema`)
+  - Service: `src/lib/services/itineraryService.ts` (`listByNote()`)
+  - Route: `src/pages/api/notes/[noteId]/itineraries/index.ts` (GET handler)
+  - Tests: 14 validator tests + 9 service tests (all passing)
+  - Features: Status filtering, limit control, version ordering DESC
+- **Notes**:
+  - Returns empty array if note has no itineraries
+  - Excludes soft-deleted itineraries (`deleted_at IS NULL`)
+  - Note ownership verified before listing
+  - Status filter is optional (omit to get all statuses)
 
 #### Get Itinerary by ID
 - **Method**: `GET`
 - **Path**: `/api/itineraries/:itineraryId`
-- **Description**: Retrieves a specific itinerary
-- **Auth**: Required
+- **Description**: Retrieves a single itinerary by ID with complete details
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 6, 2024)
 - **Path Parameters**:
   - `itineraryId` (uuid, required) - Itinerary identifier
 - **Request Body**: None
 - **Response**: Same structure as single item in List Itineraries
-- **Success**: `200` OK
-- **Errors**:
-  - `401` Unauthorized - Not authenticated
-  - `403` Forbidden - Itinerary belongs to different user
-  - `404` Not Found - Itinerary does not exist
-  - `500` Internal Server Error
-
-#### Generate Itinerary
-- **Method**: `POST`
-- **Path**: `/api/notes/:noteId/itineraries`
-- **Description**: Initiates AI-powered itinerary generation for a note
-- **Auth**: Required
-- **Path Parameters**:
-  - `noteId` (uuid, required) - Note identifier
-- **Request Body**:
-  ```json
-  {
-    "request_id": "uuid"
-  }
-  ```
-- **Response**:
   ```json
   {
     "itinerary_id": "uuid",
     "note_id": "uuid",
+    "user_id": "uuid",
+    "version": 2,
+    "status": "completed",
+    "summary_json": {
+      "title": "Mountain Loop Adventure",
+      "days": [...],
+      "total_distance_km": 285.5,
+      "total_duration_h": 5.5,
+      "highlights": ["Mountain pass", "Scenic overlook"]
+    },
+    "gpx_metadata": {
+      "waypoint_count": 15,
+      "route_name": "Mountain Loop Adventure"
+    },
+    "request_id": "uuid",
+    "created_at": "2025-01-16T14:20:00Z",
+    "updated_at": "2025-01-16T14:20:30Z"
+  }
+  ```
+- **Success**: `200` OK
+- **Errors**:
+  - `400` Bad Request - Invalid itineraryId format
+    ```json
+    {
+      "error": "invalid_parameter",
+      "message": "Itinerary ID must be a valid UUID",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
+  - `401` Unauthorized - Not authenticated
+  - `404` Not Found - Itinerary does not exist, deleted, or belongs to another user
+    ```json
+    {
+      "error": "itinerary_not_found",
+      "message": "Itinerary not found or has been deleted",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
+  - `500` Internal Server Error
+- **Implementation Details**:
+  - Service: `src/lib/services/itineraryService.ts` (`getById()`)
+  - Route: `src/pages/api/itineraries/[itineraryId]/index.ts` (GET handler)
+  - Tests: 6 service tests (all passing)
+  - Security: RLS enforces ownership (returns 404 for unauthorized access)
+- **Notes**:
+  - Straightforward SELECT by primary key (indexed)
+  - Returns 404 for both non-existent and unauthorized access (security through obscurity)
+  - Excludes soft-deleted itineraries
+  - Returns complete itinerary details including summary_json and gpx_metadata
+
+#### Generate Itinerary
+- **Method**: `POST`
+- **Path**: `/api/notes/:noteId/itineraries`
+- **Description**: Initiates AI-powered itinerary generation for a note. Creates a new itinerary row in "pending" state and returns minimal generation metadata. Generation runs asynchronously in the background.
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Path Parameters**:
+  - `noteId` (uuid, required) - Note identifier
+- **Headers**:
+  - `Content-Type: application/json` (required)
+- **Request Body**:
+  ```json
+  {
+    "request_id": "550e8400-e29b-41d4-a716-446655440000"
+  }
+  ```
+  - `request_id` (uuid, required) - Client-generated idempotency key to prevent duplicate generations
+- **Response**:
+  ```json
+  {
+    "itinerary_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "note_id": "550e8400-e29b-41d4-a716-446655440000",
     "version": 1,
     "status": "pending",
-    "request_id": "uuid",
+    "request_id": "550e8400-e29b-41d4-a716-446655440000",
     "created_at": "2025-01-16T14:20:00Z"
   }
   ```
 - **Success**: `202` Accepted - Generation started
 - **Errors**:
-  - `400` Bad Request - Invalid request or missing request_id
+  - `400` Bad Request - Invalid noteId format, malformed JSON, or validation failed
+    ```json
+    {
+      "error": "validation_failed",
+      "message": "Validation errors",
+      "details": {
+        "request_id": "Request ID must be a valid UUID"
+      },
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
   - `401` Unauthorized - Not authenticated
-  - `403` Forbidden - Note belongs to different user or user preferences incomplete
-  - `404` Not Found - Note does not exist
+    ```json
+    {
+      "error": "unauthenticated",
+      "message": "Login required",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
+  - `403` Forbidden - User preferences incomplete
+    ```json
+    {
+      "error": "profile_incomplete",
+      "message": "User preferences must be completed before generating itineraries",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
+  - `404` Not Found - Note does not exist or has been deleted
+    ```json
+    {
+      "error": "note_not_found",
+      "message": "Note not found or has been deleted",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
   - `409` Conflict - User already has a running generation
     ```json
     {
-      "error": "Generation already in progress",
-      "active_request_id": "uuid",
-      "message": "Please wait for the current generation to complete"
+      "error": "generation_in_progress",
+      "message": "Another itinerary generation is already in progress",
+      "details": {
+        "active_request_id": "existing-uuid-here"
+      },
+      "timestamp": "2025-01-16T14:20:00Z"
     }
     ```
   - `429` Too Many Requests - OpenAI spend limit reached
     ```json
     {
-      "error": "Service limit reached",
-      "message": "Monthly AI generation quota exceeded. Please try again next month."
+      "error": "service_limit_reached",
+      "message": "Monthly AI generation quota exceeded",
+      "timestamp": "2025-01-16T14:20:00Z"
     }
     ```
   - `500` Internal Server Error
+    ```json
+    {
+      "error": "server_error",
+      "message": "Failed to start generation",
+      "timestamp": "2025-01-16T14:20:00Z"
+    }
+    ```
+- **Idempotency**: Duplicate `request_id` returns existing itinerary (same response structure)
+- **Concurrency**: Enforces single concurrent generation per user via database constraint
+- **Version Management**: Version number auto-increments for each note (starts at 1)
+- **Validation**: Enforced with Zod schema (`generateItinerarySchema`)
+- **Logging**: All operations logged with structured context (userId, noteId, itineraryId, requestId)
+- **Tests**:
+  - Unit tests cover schema validation (`src/lib/validators/itinerary.test.ts`)
+  - Service tests cover all business logic scenarios (`src/lib/services/itineraryService.test.ts`)
+- **cURL Examples**:
+  ```bash
+  # Success case
+  curl -X POST http://localhost:4321/api/notes/550e8400-e29b-41d4-a716-446655440000/itineraries \
+    -H "Content-Type: application/json" \
+    -H "Cookie: viberide-auth=..." \
+    -d '{"request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"}'
+
+  # Dev mode (no auth)
+  DEVENV=true curl -X POST http://localhost:4321/api/notes/550e8400-e29b-41d4-a716-446655440000/itineraries \
+    -H "Content-Type: application/json" \
+    -d '{"request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"}'
+
+  # Invalid UUID format
+  curl -X POST http://localhost:4321/api/notes/invalid-uuid/itineraries \
+    -H "Content-Type: application/json" \
+    -d '{"request_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"}'
+  # Returns 400 Bad Request
+
+  # Missing request_id
+  curl -X POST http://localhost:4321/api/notes/550e8400-e29b-41d4-a716-446655440000/itineraries \
+    -H "Content-Type: application/json" \
+    -d '{}'
+  # Returns 400 Bad Request with validation details
+  ```
 
 #### Get Itinerary Generation Status
 - **Method**: `GET`
@@ -736,17 +966,24 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 #### Notes
 - **title**: VARCHAR(120)
   - Required
-  - Minimum 1 character
+  - Minimum 1 character (after trimming)
   - Maximum 120 characters
+  - Trimmed before validation
   - Must be unique per user (case-sensitive)
+  - Database constraint: UNIQUE (user_id, title) WHERE deleted_at IS NULL
 - **note_text**: TEXT
   - Required
-  - Minimum 10 characters
+  - Minimum 10 characters (after trimming)
   - Maximum 1500 characters
+  - Trimmed before validation
 - **trip_prefs**: JSONB (optional overrides)
-  - Must be valid JSON object
-  - If provided, follows same validation as user_preferences
-  - Null/missing fields inherit from user_preferences
+  - All fields optional (defaults to empty object {})
+  - If provided, follows same validation as user_preferences:
+    - `terrain`: "paved" | "gravel" | "mixed"
+    - `road_type`: "scenic" | "twisty" | "highway"
+    - `duration_h`: Number, > 0, max 999.9
+    - `distance_km`: Number, > 0, max 999999.9
+  - Null/missing fields inherit from user_preferences during itinerary generation
 
 #### Itineraries
 - **request_id**: UUID
@@ -763,10 +1000,17 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 #### Profile Completion Gate
 - **Rule**: Users must complete preferences before creating notes
+- **Status**: ✅ Implemented
 - **Implementation**:
-  - POST `/api/notes` checks for existing `user_preferences` record
-  - Returns `403 Forbidden` with message if incomplete
+  - POST `/api/notes` checks for existing `user_preferences` record via service layer
+  - Service throws `PREFERENCES_INCOMPLETE` error if not found
+  - Route handler maps to `403 Forbidden` with error code `preferences_incomplete`
+  - Error message: "User preferences must be set before creating notes"
   - Frontend redirects to profile page
+- **Files**:
+  - Service: `src/lib/services/notesService.ts` (`createNote()`)
+  - Route: `src/pages/api/notes/index.ts` (POST handler)
+  - Tests: `src/lib/services/notesService.test.ts` (7 tests including prerequisite check)
 
 #### Concurrency Control
 - **Rule**: One itinerary generation per user at a time
@@ -778,11 +1022,18 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 #### Title Uniqueness
 - **Rule**: Note titles must be unique per user (excluding deleted)
+- **Status**: ✅ Implemented
 - **Implementation**:
   - Database constraint: `UNIQUE (user_id, title) WHERE deleted_at IS NULL`
-  - POST/PUT `/api/notes` validates title
-  - On conflict, returns `409 Conflict` with suggestions
+  - POST `/api/notes` catches unique constraint violation (error code 23505)
+  - Service throws `NOTE_TITLE_CONFLICT` error
+  - Route handler maps to `409 Conflict` with error code `note_title_conflict`
+  - Error message: "A note with this title already exists"
   - Deleted notes don't block reuse of titles
+- **Files**:
+  - Service: `src/lib/services/notesService.ts` (`createNote()`)
+  - Route: `src/pages/api/notes/index.ts` (POST handler)
+  - Tests: `src/lib/services/notesService.test.ts` (duplicate title test)
 
 #### Soft Deletion Cascade
 - **Rule**: Deleting a note soft-deletes its itineraries
@@ -820,12 +1071,24 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 
 #### Full-Text Search
 - **Rule**: Search notes by content
+- **Status**: ✅ Implemented
 - **Implementation**:
-  - Uses `search_vector` generated column (tsvector)
-  - GET `/api/notes?search=query` uses `@@` operator
-  - Searches against `note_text` field
+  - Uses `search_vector` generated column (tsvector) on notes table
+  - GET `/api/notes?search=query` uses Supabase `.textSearch()` method
+  - Searches against `note_text` field via `search_vector` column
   - Simple language config (no stemming for MVP)
-  - GIN index ensures fast queries
+  - GIN index `idx_notes_search` ensures fast queries
+  - Search query max length: 250 characters
+  - Case-insensitive, exact token matching
+- **Files**:
+  - Validator: `src/lib/validators/notes.ts` (`listNotesQuerySchema`)
+  - Service: `src/lib/services/notesService.ts` (`listNotes()`)
+  - Route: `src/pages/api/notes/index.ts` (GET handler)
+  - Tests: `src/lib/validators/notes.test.ts`, `src/lib/services/notesService.test.ts`
+- **Limitations**:
+  - No phrase matching or fuzzy search
+  - No search ranking/relevance scoring
+  - Future enhancement: Advanced search with ranking
 
 #### Preference Override Resolution
 - **Rule**: Note-level preferences override user defaults
@@ -987,30 +1250,48 @@ Errors include retry hints:
 
 ### 7.2 API Route Organization
 
+**Planned Structure:**
 ```
 src/pages/api/
 ├── user/
-│   └── preferences.ts     # GET/PUT preferences
+│   └── preferences.ts     # ✅ GET/PUT preferences
 ├── notes/
-│   ├── index.ts           # GET list, POST create
+│   ├── index.ts           # ✅ GET list, POST create
 │   └── [noteId]/
-│       ├── index.ts       # GET/PUT/DELETE note
-│       ├── archive.ts     # POST archive
-│       ├── unarchive.ts   # POST unarchive
+│       ├── index.ts       # 🔲 GET/PUT/DELETE note
+│       ├── archive.ts     # 🔲 POST archive
+│       ├── unarchive.ts   # 🔲 POST unarchive
 │       └── itineraries/
-│           └── index.ts   # GET list, POST generate
+│           └── index.ts   # 🔲 GET list, ✅ POST generate
 ├── itineraries/
 │   └── [itineraryId]/
-│       ├── index.ts       # GET/DELETE itinerary
-│       ├── status.ts      # GET generation status
-│       ├── cancel.ts      # POST cancel generation
-│       └── gpx.ts         # GET download GPX
+│       ├── index.ts       # ✅ GET/DELETE itinerary
+│       ├── status.ts      # ✅ GET generation status
+│       ├── cancel.ts      # ✅ POST cancel generation
+│       └── gpx.ts         # ✅ GET download GPX
 ├── analytics/
 │   ├── users/
-│   │   └── stats.ts       # GET user statistics
+│   │   └── stats.ts       # 🔲 GET user statistics
 │   └── generations/
-│       └── stats.ts       # GET generation statistics
-└── health.ts              # GET health check
+│       └── stats.ts       # 🔲 GET generation statistics
+└── health.ts              # 🔲 GET health check
+```
+
+**Implemented Supporting Files:**
+```
+src/lib/
+├── validators/
+│   ├── notes.ts           # ✅ Zod schemas (tripPreferences, createNote, listNotesQuery)
+│   ├── notes.test.ts      # ✅ 49 passing tests
+│   ├── userPreferences.ts # ✅ User preferences validation
+│   └── itinerary.ts       # ✅ Itinerary generation validation
+├── services/
+│   ├── notesService.ts    # ✅ listNotes(), createNote()
+│   ├── notesService.test.ts # ✅ 13 passing tests
+│   ├── userPreferencesService.ts # ✅ User preferences service
+│   └── itineraryService.ts # ✅ Itinerary generation service
+├── http.ts                # ✅ HTTP helpers (sendJson, sendError)
+└── logger.ts              # ✅ Structured logging
 ```
 
 ### 7.3 Shared Type Definitions
@@ -1040,6 +1321,38 @@ export interface NoteResponse { ... }
 - Prefer Supabase query builder over raw SQL for type safety
 - Use parameterized queries to prevent SQL injection
 - Enable statement timeout (30s) to prevent long-running queries
+
+**Implemented Patterns:**
+- **Service Layer**: All database operations encapsulated in service functions (`src/lib/services/`)
+- **Query Building**: Dynamic Supabase queries with method chaining (`.select()`, `.eq()`, `.textSearch()`, etc.)
+- **Error Handling**: Service functions throw typed errors, route handlers map to HTTP status codes
+- **Pagination**: Offset-based with `.range()` method and `count: "exact"` for metadata
+- **Aggregation**: Separate optimized queries for related data (e.g., itinerary counts)
+- **Validation**: Zod schemas in validators (`src/lib/validators/`) before service calls
+- **Logging**: Structured logging with context (userId, noteId, etc.) via `src/lib/logger.ts`
+
+**Example Query Pattern** (from `listNotes()`):
+```typescript
+let query = supabase
+  .from('notes')
+  .select('*', { count: 'exact' })
+  .eq('user_id', userId)
+  .is('deleted_at', null);
+
+if (params.archived) {
+  query = query.not('archived_at', 'is', null);
+} else {
+  query = query.is('archived_at', null);
+}
+
+if (params.search) {
+  query = query.textSearch('search_vector', params.search);
+}
+
+const { data, error, count } = await query
+  .order(params.sort, { ascending: params.order === 'asc' })
+  .range(offset, offset + params.limit - 1);
+```
 
 ---
 

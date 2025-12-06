@@ -42,3 +42,457 @@ Creates or updates user preferences (upsert operation).
 - `400 Bad Request`: Validation failed (see error details)
 - `401 Unauthorized`: Not authenticated
 - `500 Internal Server Error`: Server error
+
+### Notes
+
+#### GET /api/notes
+Retrieves paginated list of user's notes (excludes soft-deleted).
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Query Parameters:**
+- `page` (integer, optional, default: 1): Page number (≥ 1)
+- `limit` (integer, optional, default: 20, max: 100): Items per page
+- `search` (string, optional, max: 250 chars): Full-text search query
+- `archived` (boolean, optional, default: false): Include archived notes
+- `sort` (enum, optional, default: "updated_at"): Sort field - "updated_at" | "created_at" | "title"
+- `order` (enum, optional, default: "desc"): Sort order - "asc" | "desc"
+
+**Response:**
+- `200 OK`: Returns `NotesPaginatedResponse`
+  ```json
+  {
+    "data": [
+      {
+        "note_id": "uuid",
+        "title": "Weekend Mountain Ride",
+        "note_text": "Planning a scenic ride through...",
+        "trip_prefs": {
+          "terrain": "paved",
+          "road_type": "scenic"
+        },
+        "distance_km": null,
+        "duration_h": null,
+        "terrain": null,
+        "road_type": null,
+        "has_itinerary": true,
+        "itinerary_count": 3,
+        "created_at": "2024-12-06T10:00:00.000Z",
+        "updated_at": "2024-12-06T10:00:00.000Z",
+        "archived_at": null
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 45,
+      "total_pages": 3
+    }
+  }
+  ```
+- `400 Bad Request`: Invalid query parameters
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Requested page exceeds total pages
+- `500 Internal Server Error`: Server error
+
+**Features:**
+- Full-text search using PostgreSQL `search_vector`
+- Multi-field sorting (updated_at, created_at, title)
+- Itinerary count aggregation per note
+- Archived/active filtering
+
+#### POST /api/notes
+Creates a new trip note.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Prerequisites:** User must have preferences set
+
+**Request Body:** `CreateNoteRequest`
+```json
+{
+  "title": "Weekend Mountain Ride",
+  "note_text": "Planning a scenic ride through the mountains with stops at various viewpoints.",
+  "trip_prefs": {
+    "terrain": "paved",
+    "road_type": "scenic",
+    "duration_h": 4.0,
+    "distance_km": 200.0
+  }
+}
+```
+
+**Validation:**
+- `title`: String, 1-120 characters, trimmed, required, unique per user
+- `note_text`: String, 10-1500 characters, trimmed, required
+- `trip_prefs`: Object, optional, all fields optional:
+  - `terrain`: "paved" | "gravel" | "mixed"
+  - `road_type`: "scenic" | "twisty" | "highway"
+  - `duration_h`: Number, > 0, max 999.9
+  - `distance_km`: Number, > 0, max 999999.9
+
+**Response:**
+- `201 Created`: Note created successfully
+  ```json
+  {
+    "note_id": "uuid",
+    "user_id": "uuid",
+    "title": "Weekend Mountain Ride",
+    "note_text": "Planning a scenic ride through...",
+    "trip_prefs": {
+      "terrain": "paved",
+      "road_type": "scenic",
+      "duration_h": 4.0,
+      "distance_km": 200.0
+    },
+    "ai_summary": null,
+    "distance_km": null,
+    "duration_h": null,
+    "terrain": null,
+    "road_type": null,
+    "created_at": "2024-12-06T10:00:00.000Z",
+    "updated_at": "2024-12-06T10:00:00.000Z",
+    "archived_at": null
+  }
+  ```
+- `400 Bad Request`: Validation error or malformed JSON
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: User preferences not set
+- `409 Conflict`: Note with this title already exists
+- `500 Internal Server Error`: Server error
+
+### Itineraries
+
+#### POST /api/notes/:noteId/itineraries
+Starts AI-powered itinerary generation for an existing note. Creates a new itinerary row in "pending" state and returns minimal generation metadata. Generation runs asynchronously in the background.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `noteId` (UUID): ID of the note to generate itinerary for
+
+**Request Body:** `GenerateItineraryRequest`
+```json
+{
+  "request_id": "uuid" // Client-generated idempotency key
+}
+```
+
+**Response:**
+- `202 Accepted`: Generation successfully initiated, returns `GenerateItineraryResponse`
+  ```json
+  {
+    "itinerary_id": "uuid",
+    "note_id": "uuid",
+    "version": 1,
+    "status": "pending",
+    "request_id": "uuid",
+    "created_at": "ISO8601"
+  }
+  ```
+- `400 Bad Request`: Invalid noteId format or validation failed
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: Note not owned by user OR user preferences missing
+- `404 Not Found`: Note does not exist or has been deleted
+- `409 Conflict`: Another generation already running for this user
+  ```json
+  {
+    "error": "generation_in_progress",
+    "message": "Another itinerary generation is already in progress",
+    "details": {
+      "active_request_id": "uuid"
+    }
+  }
+  ```
+- `429 Too Many Requests`: Monthly OpenAI spend cap exceeded
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Enforces single concurrent generation per user via database constraint
+- Idempotent: duplicate `request_id` returns existing itinerary
+- Requires user to have completed preferences before first generation
+- Version number auto-increments for each note
+
+#### GET /api/notes/:noteId/itineraries
+Lists all itinerary versions for a specific note, ordered by version DESC (newest first).
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `noteId` (UUID): ID of the note
+
+**Query Parameters:**
+- `status` (optional): Filter by status - "pending" | "running" | "completed" | "failed" | "cancelled"
+- `limit` (optional, default: 20, max: 100): Maximum number of results
+
+**Response:**
+- `200 OK`: Success, returns `ItinerariesListResponse`
+  ```json
+  {
+    "data": [
+      {
+        "itinerary_id": "uuid",
+        "note_id": "uuid",
+        "user_id": "uuid",
+        "version": 3,
+        "status": "completed",
+        "summary_json": {
+          "title": "Mountain Loop Adventure",
+          "days": [...],
+          "total_distance_km": 285.5,
+          "total_duration_h": 5.5,
+          "highlights": ["Mountain pass", "Scenic overlook"]
+        },
+        "gpx_metadata": {
+          "waypoint_count": 15,
+          "route_name": "Mountain Loop Adventure"
+        },
+        "request_id": "uuid",
+        "created_at": "ISO8601",
+        "updated_at": "ISO8601"
+      }
+    ]
+  }
+  ```
+- `400 Bad Request`: Invalid noteId format or query parameters
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: Note owned by another user
+- `404 Not Found`: Note does not exist or has been deleted
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Returns empty array if note has no itineraries
+- Ordered by version DESC (newest first)
+- Excludes soft-deleted itineraries
+- Status filter is optional (omit to get all statuses)
+
+#### GET /api/itineraries/:itineraryId
+Retrieves a single itinerary by ID.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary
+
+**Response:**
+- `200 OK`: Success, returns `ItineraryResponse`
+  ```json
+  {
+    "itinerary_id": "uuid",
+    "note_id": "uuid",
+    "user_id": "uuid",
+    "version": 2,
+    "status": "completed",
+    "summary_json": {
+      "title": "Mountain Loop Adventure",
+      "days": [...],
+      "total_distance_km": 285.5,
+      "total_duration_h": 5.5,
+      "highlights": ["Mountain pass", "Scenic overlook"]
+    },
+    "gpx_metadata": {
+      "waypoint_count": 15,
+      "route_name": "Mountain Loop Adventure"
+    },
+    "request_id": "uuid",
+    "created_at": "ISO8601",
+    "updated_at": "ISO8601"
+  }
+  ```
+- `400 Bad Request`: Invalid itineraryId format
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- RLS enforces ownership (returns 404 for unauthorized access)
+- Excludes soft-deleted itineraries
+- Returns complete itinerary details including summary_json
+
+#### DELETE /api/itineraries/:itineraryId
+Soft-deletes an itinerary by setting the `deleted_at` timestamp. Only allows deletion of itineraries with terminal status (completed, failed, or cancelled). Cannot delete pending or running itineraries.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary to delete
+
+**Response:**
+- `200 OK`: Successfully deleted, returns `DeleteItineraryResponse`
+  ```json
+  {
+    "success": true,
+    "itinerary_id": "uuid",
+    "deleted_at": "ISO8601"
+  }
+  ```
+- `400 Bad Request`: Invalid itineraryId format OR itinerary has non-terminal status
+  ```json
+  {
+    "error": "cannot_delete_nonterminal",
+    "message": "Cannot delete itinerary with status 'pending'. Only completed, failed, or cancelled itineraries can be deleted."
+  }
+  ```
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Soft-delete only (sets `deleted_at` timestamp, does not physically remove data)
+- Business rule: Only terminal status itineraries can be deleted (completed, failed, cancelled)
+- Attempting to delete pending/running itinerary returns 400 error
+- Attempting to delete already deleted itinerary returns 404
+- RLS enforces ownership (returns 404 for unauthorized access)
+
+#### GET /api/itineraries/:itineraryId/status
+Retrieves the generation status of an itinerary. Returns different response structure based on current status, optimized for polling.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary
+
+**Response:**
+- `200 OK`: Success, returns `ItineraryStatusResponse` (union type based on status)
+
+**Pending status:**
+```json
+{
+  "itinerary_id": "uuid",
+  "status": "pending"
+}
+```
+
+**Running status:**
+```json
+{
+  "itinerary_id": "uuid",
+  "status": "running"
+}
+```
+
+**Completed status (includes full summary):**
+```json
+{
+  "itinerary_id": "uuid",
+  "status": "completed",
+  "summary_json": {
+    "title": "Mountain Loop Adventure",
+    "days": [...],
+    "total_distance_km": 285.5,
+    "total_duration_h": 5.5,
+    "highlights": ["Mountain pass", "Scenic overlook"]
+  }
+}
+```
+
+**Failed status:**
+```json
+{
+  "itinerary_id": "uuid",
+  "status": "failed"
+}
+```
+
+**Cancelled status:**
+```json
+{
+  "itinerary_id": "uuid",
+  "status": "cancelled",
+  "cancelled_at": "ISO8601"
+}
+```
+
+- `400 Bad Request`: Invalid itineraryId format
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Optimized for polling: returns minimal fields for pending/running, full data when completed
+- Different response structure based on status (discriminated union type)
+- Use this endpoint to poll generation progress instead of fetching full itinerary
+- RLS enforces ownership (returns 404 for unauthorized access)
+- Excludes soft-deleted itineraries
+
+#### POST /api/itineraries/:itineraryId/cancel
+Cancels a pending or running itinerary generation. Only allows cancellation of itineraries with pending or running status.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary to cancel
+
+**Request Body:** None
+
+**Response:**
+- `200 OK`: Successfully cancelled, returns `CancelItineraryResponse`
+  ```json
+  {
+    "itinerary_id": "uuid",
+    "status": "cancelled",
+    "cancelled_at": "ISO8601"
+  }
+  ```
+- `400 Bad Request`: Invalid itineraryId format OR itinerary has terminal status
+  ```json
+  {
+    "error": "cannot_cancel",
+    "message": "Cannot cancel itinerary with status 'completed'. Only pending or running itineraries can be cancelled."
+  }
+  ```
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Business rule: Only pending or running itineraries can be cancelled
+- Attempting to cancel completed/failed/cancelled itinerary returns 400 error
+- Sets status to 'cancelled' and updates timestamp
+- Attempting to cancel already cancelled itinerary returns 400 (not idempotent)
+- RLS enforces ownership (returns 404 for unauthorized access)
+- Background worker should detect cancellation and stop processing
+
+#### GET /api/itineraries/:itineraryId/gpx
+Downloads a GPX 1.1 file for a completed itinerary. Requires safety disclaimer acknowledgment.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary
+
+**Query Parameters:**
+- `acknowledged` (required, must be "true"): User must acknowledge GPS accuracy disclaimer
+
+**Response:**
+- `200 OK`: Success, returns GPX file
+  - `Content-Type: application/gpx+xml`
+  - `Content-Disposition: attachment; filename="route-{title}-{id}.gpx"`
+  - Body: GPX 1.1 XML file
+- `400 Bad Request`: Invalid itineraryId format OR missing/invalid acknowledged parameter
+  ```json
+  {
+    "error": "acknowledgment_required",
+    "message": "You must acknowledge the GPS accuracy disclaimer by setting acknowledged=true"
+  }
+  ```
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `422 Unprocessable Entity`: Itinerary is not completed OR data is incomplete
+  ```json
+  {
+    "error": "itinerary_not_completed",
+    "message": "Cannot download GPX for itinerary with status 'pending'. Only completed itineraries can be downloaded."
+  }
+  ```
+- `500 Internal Server Error`: GPX generation error
+
+**Notes:**
+- Business rule: Only completed itineraries can be downloaded
+- Requires explicit acknowledgment of GPS accuracy disclaimer via query parameter
+- GPX file generated on-the-fly (not stored)
+- Returns GPX 1.1 format with waypoints and route
+- Filename sanitized from itinerary title
+- Coordinates are placeholders in MVP (production would use actual GPS data)
+- RLS enforces ownership (returns 404 for unauthorized access)
+- Response cached for 1 hour (private cache)

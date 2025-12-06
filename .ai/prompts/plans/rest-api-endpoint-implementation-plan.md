@@ -1,32 +1,32 @@
 # REST API Endpoint Implementation Plan
 
-You are an experienced software architect whose task is to create a detailed implementation plan for a REST API endpoint. Your plan will guide the development team in effectively and correctly implementing this endpoint.
+You are an experienced software architect whose task is to create a detailed implementation plan for a {{endpoint_name}} REST API endpoint. Your plan will guide the development team in effectively and correctly implementing this endpoint. Make sure plan is in line with other *-implementation-plan.md in @api directory
 
 Before we begin, review the following information:
 
 1. Route API specification:
 <route_api_specification>
-{{route-api-specification}} <- copy endpoint description from api-plan.md
+@.ai/api-plan.md 
 </route_api_specification>
 
 2. Related database resources:
 <related_db_resources>
-{{db-resources}} <- copy tables and relationships from db-plan.md
+@.ai/db-plan.md @.ai/db-summary.md 
 </related_db_resources>
 
 3. Type definitions:
 <type_definitions>
-{{types}} <- replace with reference to type definitions (e.g., @types)
+@src/types.ts @src/db/database.types.ts 
 </type_definitions>
 
 3. Tech stack:
 <tech_stack>
-{{tech-stack}} <- replace with reference to @tech-stack.md
+@.ai/tech-stack.md 
 </tech_stack>
 
 4. Implementation rules:
 <implementation_rules>
-{{backend-rules}} <- replace with reference to Rules for AI for backend (e.g., @shared.mdc, @backend.mdc, @astro.mdc)
+@.cursor/rules/shared.mdc @.cursor/rules/backend.mdc @.cursor/rules/astro.mdc 
 </implementation_rules>
 
 Your task is to create a comprehensive implementation plan for the REST API endpoint. Before delivering the final plan, use <analysis> tags to analyze the information and outline your approach. In this analysis, ensure that:
@@ -105,4 +105,4 @@ The final output should be a well-organized implementation plan in markdown form
 
 The final output should consist solely of the implementation plan in markdown format and should not duplicate or repeat any work done in the analysis section.
 
-Remember to save your implementation plan as .ai/view-implementation-plan.md. Ensure the plan is detailed, clear, and provides comprehensive guidance for the development team.
+Remember to save your implementation plan as .ai/api/{{endpoint_name}}-endpoint-implementation-plan.md. Ensure the plan is detailed, clear, and provides comprehensive guidance for the development team.
