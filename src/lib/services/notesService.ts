@@ -3,9 +3,12 @@ import type {
   NoteListItemResponse,
   NotesPaginatedResponse,
   NoteResponse,
+  DeleteNoteResponse,
+  ArchiveNoteResponse,
+  UnarchiveNoteResponse,
   PaginationMeta,
 } from "../../types";
-import type { CreateNoteInput, ListNotesQueryInput } from "../validators/notes";
+import type { CreateNoteInput, UpdateNoteInput, ListNotesQueryInput } from "../validators/notes";
 
 /**
  * Service for managing notes
@@ -204,3 +207,248 @@ export async function createNote(
   return noteResponse as NoteResponse;
 }
 
+/**
+ * Retrieves a single note by ID for a specific user
+ * @param supabase Supabase client instance
+ * @param noteId Note ID to retrieve
+ * @param userId User ID from authenticated session
+ * @returns Note details
+ * @throws Error if note not found, deleted, or access denied
+ */
+export async function getNoteById(supabase: SupabaseClient, noteId: string, userId: string): Promise<NoteResponse> {
+  const { data, error } = await supabase
+    .from("notes")
+    .select(
+      `
+      note_id,
+      user_id,
+      title,
+      note_text,
+      trip_prefs,
+      ai_summary,
+      distance_km,
+      duration_h,
+      terrain,
+      road_type,
+      created_at,
+      updated_at,
+      archived_at
+    `
+    )
+    .eq("note_id", noteId)
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .single();
+
+  if (error) {
+    // PGRST116 means no rows returned
+    if (error.code === "PGRST116") {
+      throw new Error("NOTE_NOT_FOUND");
+    }
+    throw new Error(`Failed to fetch note: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  return data as NoteResponse;
+}
+
+/**
+ * Updates an existing note for a user
+ * @param supabase Supabase client instance
+ * @param noteId Note ID to update
+ * @param userId User ID from authenticated session
+ * @param input Note update data
+ * @returns Updated note
+ * @throws Error if note not found, access denied, or validation fails
+ */
+export async function updateNote(
+  supabase: SupabaseClient,
+  noteId: string,
+  userId: string,
+  input: UpdateNoteInput
+): Promise<NoteResponse> {
+  // First verify the note exists and belongs to the user
+  await getNoteById(supabase, noteId, userId);
+
+  // Update the note
+  const { data, error } = await supabase
+    .from("notes")
+    .update({
+      title: input.title,
+      note_text: input.note_text,
+      trip_prefs: input.trip_prefs || {},
+      updated_at: new Date().toISOString(),
+    })
+    .eq("note_id", noteId)
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .select("*")
+    .single();
+
+  if (error) {
+    // Check for unique constraint violation (duplicate title)
+    if (error.code === "23505" && error.message.includes("notes_user_id_title_key")) {
+      throw new Error("NOTE_TITLE_CONFLICT");
+    }
+    throw new Error(`Failed to update note: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  // Map to response format (exclude deleted_at)
+  const { deleted_at, ...noteResponse } = data;
+  return noteResponse as NoteResponse;
+}
+
+/**
+ * Soft-deletes a note for a user (sets deleted_at timestamp)
+ * Cascades delete to associated itineraries via database trigger
+ * @param supabase Supabase client instance
+ * @param noteId Note ID to delete
+ * @param userId User ID from authenticated session
+ * @returns Delete confirmation with timestamp
+ * @throws Error if note not found or access denied
+ */
+export async function deleteNote(
+  supabase: SupabaseClient,
+  noteId: string,
+  userId: string
+): Promise<DeleteNoteResponse> {
+  // First verify the note exists and belongs to the user
+  await getNoteById(supabase, noteId, userId);
+
+  // Soft delete the note (database trigger will cascade to itineraries)
+  const deletedAt = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("notes")
+    .update({
+      deleted_at: deletedAt,
+    })
+    .eq("note_id", noteId)
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .select("note_id, deleted_at")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to delete note: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  return {
+    success: true,
+    note_id: data.note_id,
+    deleted_at: data.deleted_at!,
+  };
+}
+
+/**
+ * Archives a note for a user (sets archived_at timestamp)
+ * Idempotent operation - returns current state if already archived
+ * @param supabase Supabase client instance
+ * @param noteId Note ID to archive
+ * @param userId User ID from authenticated session
+ * @returns Archive confirmation with timestamp
+ * @throws Error if note not found or access denied
+ */
+export async function archiveNote(
+  supabase: SupabaseClient,
+  noteId: string,
+  userId: string
+): Promise<ArchiveNoteResponse> {
+  // First verify the note exists and belongs to the user
+  const note = await getNoteById(supabase, noteId, userId);
+
+  // If already archived, return current state (idempotent)
+  if (note.archived_at) {
+    return {
+      note_id: note.note_id,
+      archived_at: note.archived_at,
+    };
+  }
+
+  // Archive the note
+  const archivedAt = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("notes")
+    .update({
+      archived_at: archivedAt,
+    })
+    .eq("note_id", noteId)
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .select("note_id, archived_at")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to archive note: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  return {
+    note_id: data.note_id,
+    archived_at: data.archived_at!,
+  };
+}
+
+/**
+ * Unarchives a note for a user (clears archived_at timestamp)
+ * Idempotent operation - returns current state if already unarchived
+ * @param supabase Supabase client instance
+ * @param noteId Note ID to unarchive
+ * @param userId User ID from authenticated session
+ * @returns Unarchive confirmation with null archived_at
+ * @throws Error if note not found or access denied
+ */
+export async function unarchiveNote(
+  supabase: SupabaseClient,
+  noteId: string,
+  userId: string
+): Promise<UnarchiveNoteResponse> {
+  // First verify the note exists and belongs to the user
+  const note = await getNoteById(supabase, noteId, userId);
+
+  // If already unarchived, return current state (idempotent)
+  if (!note.archived_at) {
+    return {
+      note_id: note.note_id,
+      archived_at: null,
+    };
+  }
+
+  // Unarchive the note
+  const { data, error } = await supabase
+    .from("notes")
+    .update({
+      archived_at: null,
+    })
+    .eq("note_id", noteId)
+    .eq("user_id", userId)
+    .is("deleted_at", null)
+    .select("note_id, archived_at")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to unarchive note: ${error.message}`);
+  }
+
+  if (!data) {
+    throw new Error("NOTE_NOT_FOUND");
+  }
+
+  return {
+    note_id: data.note_id,
+    archived_at: null,
+  };
+}

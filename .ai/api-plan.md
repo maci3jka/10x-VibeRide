@@ -13,9 +13,9 @@ For development purposes authentication MUST have option to be disabled. it shou
 | `/api/user/preferences` | PUT | ✅ Implemented | December 2024 |
 | `/api/notes` | GET | ✅ Implemented | December 6, 2024 |
 | `/api/notes` | POST | ✅ Implemented | December 6, 2024 |
-| `/api/notes/:noteId` | GET | 🔲 Planned | - |
-| `/api/notes/:noteId` | PUT | 🔲 Planned | - |
-| `/api/notes/:noteId` | DELETE | 🔲 Planned | - |
+| `/api/notes/:noteId` | GET | ✅ Implemented | December 7, 2024 |
+| `/api/notes/:noteId` | PUT | ✅ Implemented | December 7, 2024 |
+| `/api/notes/:noteId` | DELETE | ✅ Implemented | December 7, 2024 |
 | `/api/notes/:noteId/archive` | POST | 🔲 Planned | - |
 | `/api/notes/:noteId/unarchive` | POST | 🔲 Planned | - |
 | `/api/notes/:noteId/itineraries` | GET | ✅ Implemented | December 6, 2024 |
@@ -25,9 +25,9 @@ For development purposes authentication MUST have option to be disabled. it shou
 | `/api/itineraries/:itineraryId/status` | GET | ✅ Implemented | December 6, 2024 |
 | `/api/itineraries/:itineraryId/cancel` | POST | ✅ Implemented | December 6, 2024 |
 | `/api/itineraries/:itineraryId/gpx` | GET | ✅ Implemented | December 6, 2024 |
-| `/api/analytics/users/stats` | GET | 🔲 Planned | - |
-| `/api/analytics/generations/stats` | GET | 🔲 Planned | - |
-| `/api/health` | GET | 🔲 Planned | - |
+| `/api/analytics/users/stats` | GET | ✅ Implemented | December 7, 2024 |
+| `/api/analytics/generations/stats` | GET | ✅ Implemented | December 7, 2024 |
+| `/api/health` | GET | ✅ Implemented | December 7, 2024 |
 
 **Legend:**
 - ✅ Implemented - Fully implemented with tests
@@ -35,10 +35,12 @@ For development purposes authentication MUST have option to be disabled. it shou
 
 **Implementation Summary:**
 - **User Preferences**: Complete (GET, PUT) - Full CRUD with validation
-- **Notes**: Partial (GET list, POST create) - List with search/pagination, create with validation
+- **Notes**: Complete (GET list, POST create, GET by ID, PUT, DELETE) - Full CRUD with search/pagination, validation, and soft delete
 - **Itineraries**: Complete (GET by ID, GET list, POST generate, DELETE, GET status, POST cancel, GET gpx) - Full CRUD with generation, status polling, cancellation, and GPX download
+- **Analytics**: Complete (GET users/stats, GET generations/stats) - Internal admin endpoints with date range filtering
+- **Health**: Complete (GET /api/health) - Public health check endpoint with concurrent DB/Auth checks
 
-**Next Priority:** Complete Notes CRUD operations (GET by ID, PUT, DELETE, archive/unarchive)
+**Next Priority:** Archive/unarchive endpoints for Notes
 
 ## 1. Resources
 
@@ -193,7 +195,8 @@ For development purposes authentication MUST have option to be disabled. it shou
 - **Method**: `GET`
 - **Path**: `/api/notes/:noteId`
 - **Description**: Retrieves a specific note by ID
-- **Auth**: Required
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 7, 2024)
 - **Path Parameters**:
   - `noteId` (uuid, required) - Note identifier
 - **Request Body**: None
@@ -226,10 +229,20 @@ For development purposes authentication MUST have option to be disabled. it shou
   ```
 - **Success**: `200` OK
 - **Errors**:
+  - `400` Bad Request - Invalid noteId format (not a valid UUID)
   - `401` Unauthorized - Not authenticated
-  - `403` Forbidden - Note belongs to different user
-  - `404` Not Found - Note does not exist or is deleted
+  - `404` Not Found - Note does not exist, is deleted, or belongs to different user
   - `500` Internal Server Error
+- **Implementation Details**:
+  - Validator: `src/lib/validators/notes.ts` (`noteIdParamSchema`)
+  - Service: `src/lib/services/notesService.ts` (`getNoteById()`)
+  - Route: `src/pages/api/notes/[noteId]/index.ts` (GET handler)
+  - Tests: 6 service unit tests + 5 integration tests (all passing)
+  - Security: RLS enforces ownership, returns 404 for unauthorized access
+- **Notes**:
+  - Returns 404 for both non-existent and unauthorized access (security through obscurity)
+  - Excludes soft-deleted notes (`deleted_at IS NULL`)
+  - Single-row SELECT with indexed PK lookup (< 10ms typical)
 
 #### Create Note
 - **Method**: `POST`
@@ -322,9 +335,12 @@ For development purposes authentication MUST have option to be disabled. it shou
 - **Method**: `PUT`
 - **Path**: `/api/notes/:noteId`
 - **Description**: Updates an existing note
-- **Auth**: Required
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 7, 2024)
 - **Path Parameters**:
   - `noteId` (uuid, required) - Note identifier
+- **Headers**:
+  - `Content-Type: application/json` (required)
 - **Request Body**:
   ```json
   {
@@ -338,15 +354,45 @@ For development purposes authentication MUST have option to be disabled. it shou
     }
   }
   ```
-- **Response**: Same as Get Note by ID
+- **Validation**: Same as Create Note (title: 1-120 chars, note_text: 10-1500 chars, trip_prefs optional)
+- **Response**: Same as Get Note by ID (returns updated note)
 - **Success**: `200` OK
 - **Errors**:
-  - `400` Bad Request - Validation errors (same as Create)
+  - `400` Bad Request - Invalid noteId format, malformed JSON, or validation errors
+    ```json
+    {
+      "error": "validation_failed",
+      "message": "Validation errors",
+      "details": {
+        "title": "Title must be at least 1 character",
+        "note_text": "Note text must be at least 10 characters"
+      },
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+    ```
   - `401` Unauthorized - Not authenticated
-  - `403` Forbidden - Note belongs to different user
-  - `404` Not Found - Note does not exist or is deleted
+  - `404` Not Found - Note does not exist, is deleted, or belongs to different user
   - `409` Conflict - Note with same title already exists for user
+    ```json
+    {
+      "error": "note_title_conflict",
+      "message": "A note with this title already exists. Please choose a different title.",
+      "timestamp": "2025-01-15T10:30:00Z"
+    }
+    ```
   - `500` Internal Server Error
+- **Implementation Details**:
+  - Validator: `src/lib/validators/notes.ts` (`updateNoteSchema`, `noteIdParamSchema`)
+  - Service: `src/lib/services/notesService.ts` (`updateNote()`)
+  - Route: `src/pages/api/notes/[noteId]/index.ts` (PUT handler)
+  - Tests: 6 service unit tests + 6 integration tests (all passing)
+  - Ownership verification before update
+  - Title uniqueness constraint enforced
+- **Notes**:
+  - Automatically updates `updated_at` timestamp
+  - Verifies note ownership before allowing update
+  - Returns 404 for unauthorized access (not 403 for security)
+  - All fields in request body are required (full update, not partial)
 
 #### Archive Note
 - **Method**: `POST`
@@ -395,8 +441,9 @@ For development purposes authentication MUST have option to be disabled. it shou
 #### Delete Note
 - **Method**: `DELETE`
 - **Path**: `/api/notes/:noteId`
-- **Description**: Soft deletes a note (sets deleted_at timestamp, cascades to itineraries)
-- **Auth**: Required
+- **Description**: Soft deletes a note (sets deleted_at timestamp, cascades to itineraries via database trigger)
+- **Auth**: Required (bypassed in dev mode with DEVENV='true')
+- **Status**: ✅ **IMPLEMENTED** (December 7, 2024)
 - **Path Parameters**:
   - `noteId` (uuid, required) - Note identifier
 - **Request Body**: None
@@ -410,10 +457,22 @@ For development purposes authentication MUST have option to be disabled. it shou
   ```
 - **Success**: `200` OK
 - **Errors**:
+  - `400` Bad Request - Invalid noteId format (not a valid UUID)
   - `401` Unauthorized - Not authenticated
-  - `403` Forbidden - Note belongs to different user
-  - `404` Not Found - Note does not exist or already deleted
+  - `404` Not Found - Note does not exist, already deleted, or belongs to different user
   - `500` Internal Server Error
+- **Implementation Details**:
+  - Validator: `src/lib/validators/notes.ts` (`noteIdParamSchema`)
+  - Service: `src/lib/services/notesService.ts` (`deleteNote()`)
+  - Route: `src/pages/api/notes/[noteId]/index.ts` (DELETE handler)
+  - Tests: 6 service unit tests + 5 integration tests (all passing)
+  - Database trigger automatically cascades soft delete to associated itineraries
+- **Notes**:
+  - Soft delete only (sets `deleted_at` timestamp, preserves data)
+  - Database trigger cascades deletion to all associated itineraries
+  - Returns 404 for unauthorized access (not 403 for security)
+  - Attempting to delete already deleted note returns 404
+  - Preserves referential integrity and audit trail
 
 ---
 
@@ -1258,11 +1317,11 @@ src/pages/api/
 ├── notes/
 │   ├── index.ts           # ✅ GET list, POST create
 │   └── [noteId]/
-│       ├── index.ts       # 🔲 GET/PUT/DELETE note
+│       ├── index.ts       # ✅ GET/PUT/DELETE note
 │       ├── archive.ts     # 🔲 POST archive
 │       ├── unarchive.ts   # 🔲 POST unarchive
 │       └── itineraries/
-│           └── index.ts   # 🔲 GET list, ✅ POST generate
+│           └── index.ts   # ✅ GET list, POST generate
 ├── itineraries/
 │   └── [itineraryId]/
 │       ├── index.ts       # ✅ GET/DELETE itinerary
@@ -1281,17 +1340,23 @@ src/pages/api/
 ```
 src/lib/
 ├── validators/
-│   ├── notes.ts           # ✅ Zod schemas (tripPreferences, createNote, listNotesQuery)
+│   ├── notes.ts           # ✅ Zod schemas (tripPreferences, createNote, updateNote, listNotesQuery, noteIdParam)
 │   ├── notes.test.ts      # ✅ 49 passing tests
 │   ├── userPreferences.ts # ✅ User preferences validation
 │   └── itinerary.ts       # ✅ Itinerary generation validation
 ├── services/
-│   ├── notesService.ts    # ✅ listNotes(), createNote()
-│   ├── notesService.test.ts # ✅ 13 passing tests
+│   ├── notesService.ts    # ✅ listNotes(), createNote(), getNoteById(), updateNote(), deleteNote()
+│   ├── notesService.test.ts # ✅ 29 passing tests (unit tests)
 │   ├── userPreferencesService.ts # ✅ User preferences service
 │   └── itineraryService.ts # ✅ Itinerary generation service
-├── http.ts                # ✅ HTTP helpers (sendJson, sendError)
+├── http.ts                # ✅ HTTP helpers (jsonResponse, errorResponse)
 └── logger.ts              # ✅ Structured logging
+```
+
+**Test Files:**
+```
+src/pages/api/notes/[noteId]/
+└── index.test.ts          # ✅ 18 passing tests (integration tests)
 ```
 
 ### 7.3 Shared Type Definitions

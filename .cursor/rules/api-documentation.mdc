@@ -161,6 +161,118 @@ Creates a new trip note.
 - `409 Conflict`: Note with this title already exists
 - `500 Internal Server Error`: Server error
 
+#### GET /api/notes/:noteId
+Retrieves a single note by ID.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `noteId` (UUID): ID of the note to retrieve
+
+**Response:**
+- `200 OK`: Returns `NoteResponse`
+  ```json
+  {
+    "note_id": "uuid",
+    "user_id": "uuid",
+    "title": "Weekend Mountain Ride",
+    "note_text": "Planning a scenic ride through...",
+    "trip_prefs": {
+      "terrain": "paved",
+      "road_type": "scenic",
+      "duration_h": 4.0,
+      "distance_km": 200.0
+    },
+    "ai_summary": null,
+    "distance_km": null,
+    "duration_h": null,
+    "terrain": null,
+    "road_type": null,
+    "created_at": "2024-12-07T10:00:00.000Z",
+    "updated_at": "2024-12-07T10:00:00.000Z",
+    "archived_at": null
+  }
+  ```
+- `400 Bad Request`: Invalid noteId format (not a valid UUID)
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Note does not exist, is deleted, or belongs to different user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Returns 404 for both non-existent and unauthorized access (security through obscurity)
+- Excludes soft-deleted notes
+- RLS enforces ownership
+
+#### PUT /api/notes/:noteId
+Updates an existing note.
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `noteId` (UUID): ID of the note to update
+
+**Request Body:** `UpdateNoteRequest`
+```json
+{
+  "title": "Updated Weekend Ride",
+  "note_text": "Updated description of the scenic ride through the mountains.",
+  "trip_prefs": {
+    "terrain": "mixed",
+    "road_type": "twisty",
+    "duration_h": 5.0,
+    "distance_km": 250.0
+  }
+}
+```
+
+**Validation:** Same as POST /api/notes
+- `title`: String, 1-120 characters, trimmed, required, unique per user
+- `note_text`: String, 10-1500 characters, trimmed, required
+- `trip_prefs`: Object, optional, all fields optional
+
+**Response:**
+- `200 OK`: Returns updated `NoteResponse`
+- `400 Bad Request`: Invalid noteId format, malformed JSON, or validation errors
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Note does not exist, is deleted, or belongs to different user
+- `409 Conflict`: Note with same title already exists for user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Automatically updates `updated_at` timestamp
+- Verifies note ownership before allowing update
+- All fields in request body are required (full update, not partial)
+- Title uniqueness constraint enforced
+
+#### DELETE /api/notes/:noteId
+Soft-deletes a note (sets deleted_at timestamp, cascades to itineraries).
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `noteId` (UUID): ID of the note to delete
+
+**Response:**
+- `200 OK`: Successfully deleted, returns `DeleteNoteResponse`
+  ```json
+  {
+    "success": true,
+    "note_id": "uuid",
+    "deleted_at": "2024-12-07T15:30:00.000Z"
+  }
+  ```
+- `400 Bad Request`: Invalid noteId format (not a valid UUID)
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Note does not exist, already deleted, or belongs to different user
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Soft delete only (sets `deleted_at` timestamp, preserves data)
+- Database trigger automatically cascades deletion to all associated itineraries
+- Returns 404 for unauthorized access (not 403 for security)
+- Attempting to delete already deleted note returns 404
+- Preserves referential integrity and audit trail
+
 ### Itineraries
 
 #### POST /api/notes/:noteId/itineraries
@@ -496,3 +608,113 @@ Downloads a GPX 1.1 file for a completed itinerary. Requires safety disclaimer a
 - Coordinates are placeholders in MVP (production would use actual GPS data)
 - RLS enforces ownership (returns 404 for unauthorized access)
 - Response cached for 1 hour (private cache)
+
+### Analytics (Internal/Admin)
+
+#### GET /api/analytics/users/stats
+Retrieves aggregated user statistics for administrative dashboards.
+
+**Authentication:** Service role required (bypassed in dev mode with DEVENV='true')
+
+**Query Parameters:**
+- `from` (ISO 8601 date, optional): Statistics start date (inclusive)
+- `to` (ISO 8601 date, optional): Statistics end date (inclusive, defaults to now)
+
+**Response:**
+- `200 OK`: Returns `UserStatsResponse`
+  ```json
+  {
+    "total_users": 100,
+    "users_with_completed_profiles": 75,
+    "profile_completion_rate": 0.75,
+    "active_users_30d": 50,
+    "new_users_30d": 10
+  }
+  ```
+- `400 Bad Request`: Invalid query parameters (invalid date format or from > to)
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: Not service role (production only)
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Internal endpoint for admin dashboards only
+- Service role authentication required in production
+- Date range filters apply to `new_users_30d` calculation
+- Active users defined as users with `last_sign_in_at` within last 30 days
+- Profile completion rate = users_with_completed_profiles / total_users
+
+#### GET /api/analytics/generations/stats
+Retrieves aggregated itinerary generation statistics for administrative dashboards.
+
+**Authentication:** Service role required (bypassed in dev mode with DEVENV='true')
+
+**Query Parameters:**
+- `from` (ISO 8601 date, optional): Statistics start date (inclusive)
+- `to` (ISO 8601 date, optional): Statistics end date (inclusive, defaults to now)
+
+**Response:**
+- `200 OK`: Returns `GenerationStatsResponse`
+  ```json
+  {
+    "total_generations": 100,
+    "completed_generations": 80,
+    "failed_generations": 15,
+    "cancelled_generations": 5,
+    "failure_rate": 0.15,
+    "avg_generation_time_seconds": 45.5,
+    "p95_generation_time_seconds": 120.0,
+    "generations_per_user": {
+      "mean": 2.5,
+      "median": 2.0,
+      "users_with_3_plus": 15
+    },
+    "estimated_cost_usd": 0.8
+  }
+  ```
+- `400 Bad Request`: Invalid query parameters (invalid date format or from > to)
+- `401 Unauthorized`: Not authenticated
+- `403 Forbidden`: Not service role (production only)
+- `500 Internal Server Error`: Server error
+
+**Notes:**
+- Internal endpoint for admin dashboards only
+- Service role authentication required in production
+- Date range filters apply to all generation counts and statistics
+- Generation time calculated as `updated_at - created_at` for completed itineraries
+- P95 = 95th percentile of generation times
+- Failure rate = failed_generations / total_generations
+- Cost estimation: $0.01 per completed generation (placeholder for MVP)
+- Per-user statistics include mean, median, and count of users with 3+ generations
+
+### Health Check
+
+#### GET /api/health
+Public health check endpoint for uptime monitoring.
+
+**Authentication:** None (public endpoint)
+
+**Response:**
+- `200 OK`: Returns `HealthCheckResponse` (always returns 200 unless catastrophic failure)
+  ```json
+  {
+    "status": "healthy",
+    "database": "connected",
+    "auth": "operational",
+    "timestamp": "2025-12-07T16:00:00.000Z"
+  }
+  ```
+- `500 Internal Server Error`: Catastrophic failure (unable to construct response)
+
+**Status Values:**
+- `status`: "healthy" | "degraded" | "unhealthy"
+- `database`: "connected" | "disconnected" | "error"
+- `auth`: "operational" | "degraded" | "down"
+
+**Notes:**
+- Public endpoint designed for monitoring tools (Fly.io, Kubernetes, external monitors)
+- Performs concurrent health checks for Database and Auth subsystems
+- Returns 200 OK even when degraded to distinguish API layer from subsystem failures
+- 50ms timeout per subsystem check
+- Target latency: <100ms p95
+- No sensitive data or stack traces in responses
+- Structured logging for all scenarios

@@ -92,6 +92,19 @@ export const listNotesQuerySchema = z.object({
     .default("desc"),
 });
 
-export type CreateNoteInput = z.infer<typeof createNoteSchema>;
-export type ListNotesQueryInput = z.infer<typeof listNotesQuerySchema>;
+/**
+ * Zod schema for validating note update requests
+ * Used in PUT /api/notes/:noteId
+ * Same structure as createNoteSchema
+ */
+export const updateNoteSchema = createNoteSchema;
 
+/**
+ * Zod schema for validating noteId path parameter
+ * Used in GET/PUT/DELETE /api/notes/:noteId
+ */
+export const noteIdParamSchema = z.string().uuid("Invalid note ID format");
+
+export type CreateNoteInput = z.infer<typeof createNoteSchema>;
+export type UpdateNoteInput = z.infer<typeof updateNoteSchema>;
+export type ListNotesQueryInput = z.infer<typeof listNotesQuerySchema>;
