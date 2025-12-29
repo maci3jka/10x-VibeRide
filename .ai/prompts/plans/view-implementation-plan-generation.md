@@ -1,42 +1,42 @@
-# View Implementation Plan Generation
 
-As a senior frontend developer, your task is to create a detailed implementation plan for a new view in a web application. This plan should be comprehensive and clear enough for another frontend developer to implement the view correctly and efficiently.
+
+As a senior frontend developer, your task is to create a detailed implementation plan for a {view-name} view in a web application. This plan should be comprehensive and clear enough for another frontend developer to implement the view correctly and efficiently.
 
 First, review the following information:
 
 1. Product Requirements Document (PRD):
 <prd>
-{{prd}} <- replace with reference to @prd.md file
+@.ai/prd.md 
 </prd>
 
 2. View Description:
 <view_description>
-{{view-description}} <- paste description of the view being implemented from ui-plan.md
+@.ai/ui-plan.md 
 </view_description>
 
 3. User Stories:
 <user_stories>
-{{user-stories}} <- paste user stories from @prd.md that will be addressed by the view
+@prd.md (71-74) 
 </user_stories>
 
 4. Endpoint Description:
 <endpoint_description>
-{{endpoint-description}} <- paste endpoint descriptions from api-plan.md that the view will use
+@.ai/api-plan.md 
 </endpoint_description>
 
 5. Endpoint Implementation:
 <endpoint_implementation>
-{{endpoint-implementation}} <- replace with reference to endpoint implementations that the view will use (e.g., @generations.ts, @flashcards.ts)
+@.ai/api/ 
 </endpoint_implementation>
 
 6. Type Definitions:
 <type_definitions>
-{{types}} <- replace with reference to file with DTO definitions (e.g., @types.ts)
+@src/types.ts 
 </type_definitions>
 
 7. Tech Stack:
 <tech_stack>
-{{tech-stack}} <- replace with reference to @tech-stack.md file
+@.ai/tech-stack.md 
 </tech_stack>
 
 Before creating the final implementation plan, conduct analysis and planning inside <implementation_breakdown> tags in your thinking block. This section can be quite long, as it's important to be thorough.
@@ -132,4 +132,4 @@ Here's an example of what the output file should look like (content is to be rep
 3. [...]
 ```
 
-Begin analysis and planning now. Your final output should consist solely of the implementation plan in English in markdown format, which you will save in the .ai/{view-name}-view-implementation-plan.md file and should not duplicate or repeat any work done in the implementation breakdown.
+Begin analysis and planning now. Your final output should consist solely of the implementation plan in English in markdown format, which you will save in the .ai/ui/{view-name}-view-implementation-plan.md file and should not duplicate or repeat any work done in the implementation breakdown.

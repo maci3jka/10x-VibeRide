@@ -1,0 +1,76 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { GeneratePage } from "@/components/generate";
+
+/**
+ * Generate page - AI itinerary generation
+ * 
+ * Protected route: requires authentication
+ * Requires at least one note to exist
+ */
+
+// Check authentication
+if (!Astro.locals.user) {
+  const returnTo = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+  return Astro.redirect(`/?returnTo=${returnTo}`);
+}
+
+// Helper to build internal API URL (always use localhost for server-side fetches)
+const buildInternalUrl = (path: string) => {
+  // Always use HTTP for internal fetches (server only listens on HTTP)
+  // Extract port from the request URL, defaulting to 4321 for development
+  const port = Astro.url.port || '4321';
+  return `http://localhost:${port}${path}`;
+};
+
+// Fetch user preferences (optional - will use defaults if not set)
+let userPreferences = null;
+try {
+  const prefsResponse = await fetch(buildInternalUrl("/api/user/preferences"), {
+    headers: {
+      Cookie: Astro.request.headers.get("Cookie") || "",
+    },
+  });
+  
+  if (prefsResponse.ok) {
+    userPreferences = await prefsResponse.json();
+  }
+} catch (error) {
+  console.error("Failed to fetch user preferences:", error);
+}
+
+// Check if user has at least one note
+let hasNotes = false;
+let initialNote = null;
+
+try {
+  const notesResponse = await fetch(buildInternalUrl("/api/notes?limit=1"), {
+    headers: {
+      Cookie: Astro.request.headers.get("Cookie") || "",
+    },
+  });
+  
+  if (notesResponse.ok) {
+    const notesData = await notesResponse.json();
+    hasNotes = notesData.data.length > 0;
+    initialNote = notesData.data[0] || null;
+  }
+} catch (error) {
+  console.error("Failed to fetch notes:", error);
+}
+
+// Redirect to notes if no notes exist
+if (!hasNotes) {
+  return Astro.redirect("/notes");
+}
+
+export const prerender = false;
+---
+
+<Layout title="Generate - VibeRide">
+  <GeneratePage 
+    client:load 
+    initialNote={initialNote}
+    userPreferences={userPreferences}
+  />
+</Layout>

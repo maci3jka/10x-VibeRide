@@ -1,0 +1,42 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { NotesEditorPage } from "@/components/notes";
+
+export const prerender = false;
+
+// Check authentication
+if (!Astro.locals.user) {
+  const returnTo = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+  return Astro.redirect(`/?returnTo=${returnTo}`);
+}
+
+const { noteId } = Astro.params;
+
+// Helper to build internal API URL (always use localhost for server-side fetches)
+const buildInternalUrl = (path: string) => {
+  // Always use HTTP for internal fetches (server only listens on HTTP)
+  // Extract port from the request URL, defaulting to 4321 for development
+  const port = Astro.url.port || '4321';
+  return `http://localhost:${port}${path}`;
+};
+
+// Fetch user preferences to show defaults
+let userPreferences = null;
+try {
+  const prefsResponse = await fetch(buildInternalUrl("/api/user/preferences"), {
+    headers: {
+      Cookie: Astro.request.headers.get("Cookie") || "",
+    },
+  });
+  
+  if (prefsResponse.ok) {
+    userPreferences = await prefsResponse.json();
+  }
+} catch (error) {
+  console.error("Failed to fetch user preferences:", error);
+}
+---
+
+<Layout title="Edit Note - VibeRide">
+  <NotesEditorPage client:only="react" noteId={noteId} userPreferences={userPreferences} />
+</Layout>

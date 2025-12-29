@@ -1,0 +1,26 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import { NotesPage } from "@/components/NotesPage";
+
+/**
+ * Notes page - Trip notes list and management
+ * 
+ * Protected route: requires authentication
+ * In DEVENV mode, uses default user from middleware
+ */
+
+// Check authentication
+if (!Astro.locals.user) {
+  // Preserve intended destination for post-login redirect
+  const returnTo = encodeURIComponent(Astro.url.pathname + Astro.url.search);
+  return Astro.redirect(`/?returnTo=${returnTo}`);
+}
+
+export const prerender = false;
+---
+
+<Layout title="Notes - VibeRide">
+  <NotesPage client:load />
+</Layout>
+
+

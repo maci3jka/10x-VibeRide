@@ -348,17 +348,20 @@ Lists all itinerary versions for a specific note, ordered by version DESC (newes
         "user_id": "uuid",
         "version": 3,
         "status": "completed",
-        "summary_json": {
-          "title": "Mountain Loop Adventure",
-          "days": [...],
-          "total_distance_km": 285.5,
-          "total_duration_h": 5.5,
-          "highlights": ["Mountain pass", "Scenic overlook"]
+        "route_geojson": {
+          "type": "FeatureCollection",
+          "properties": {
+            "title": "Mountain Loop Adventure",
+            "total_distance_km": 285.5,
+            "total_duration_h": 5.5,
+            "highlights": ["Mountain pass", "Scenic overlook"],
+            "days": 2
+          },
+          "features": [...]
         },
-        "gpx_metadata": {
-          "waypoint_count": 15,
-          "route_name": "Mountain Loop Adventure"
-        },
+        "title": "Mountain Loop Adventure",
+        "total_distance_km": 285.5,
+        "total_duration_h": 5.5,
         "request_id": "uuid",
         "created_at": "ISO8601",
         "updated_at": "ISO8601"
@@ -395,17 +398,37 @@ Retrieves a single itinerary by ID.
     "user_id": "uuid",
     "version": 2,
     "status": "completed",
-    "summary_json": {
-      "title": "Mountain Loop Adventure",
-      "days": [...],
-      "total_distance_km": 285.5,
-      "total_duration_h": 5.5,
-      "highlights": ["Mountain pass", "Scenic overlook"]
+    "route_geojson": {
+      "type": "FeatureCollection",
+      "properties": {
+        "title": "Mountain Loop Adventure",
+        "total_distance_km": 285.5,
+        "total_duration_h": 5.5,
+        "highlights": ["Mountain pass", "Scenic overlook"],
+        "days": 2
+      },
+      "features": [
+        {
+          "type": "Feature",
+          "geometry": {
+            "type": "LineString",
+            "coordinates": [[19.9450, 50.0647], [19.9496, 49.2992]]
+          },
+          "properties": {
+            "name": "Segment 1",
+            "description": "Scenic mountain route",
+            "type": "route",
+            "day": 1,
+            "segment": 1,
+            "distance_km": 120.5,
+            "duration_h": 2.5
+          }
+        }
+      ]
     },
-    "gpx_metadata": {
-      "waypoint_count": 15,
-      "route_name": "Mountain Loop Adventure"
-    },
+    "title": "Mountain Loop Adventure",
+    "total_distance_km": 285.5,
+    "total_duration_h": 5.5,
     "request_id": "uuid",
     "created_at": "ISO8601",
     "updated_at": "ISO8601"
@@ -419,7 +442,8 @@ Retrieves a single itinerary by ID.
 **Notes:**
 - RLS enforces ownership (returns 404 for unauthorized access)
 - Excludes soft-deleted itineraries
-- Returns complete itinerary details including summary_json
+- Returns complete itinerary details including GeoJSON route data
+- `title`, `total_distance_km`, `total_duration_h` are derived fields for fast access
 
 #### DELETE /api/itineraries/:itineraryId
 Soft-deletes an itinerary by setting the `deleted_at` timestamp. Only allows deletion of itineraries with terminal status (completed, failed, or cancelled). Cannot delete pending or running itineraries.
@@ -483,17 +507,21 @@ Retrieves the generation status of an itinerary. Returns different response stru
 }
 ```
 
-**Completed status (includes full summary):**
+**Completed status (includes full GeoJSON):**
 ```json
 {
   "itinerary_id": "uuid",
   "status": "completed",
-  "summary_json": {
-    "title": "Mountain Loop Adventure",
-    "days": [...],
-    "total_distance_km": 285.5,
-    "total_duration_h": 5.5,
-    "highlights": ["Mountain pass", "Scenic overlook"]
+  "route_geojson": {
+    "type": "FeatureCollection",
+    "properties": {
+      "title": "Mountain Loop Adventure",
+      "total_distance_km": 285.5,
+      "total_duration_h": 5.5,
+      "highlights": ["Mountain pass", "Scenic overlook"],
+      "days": 2
+    },
+    "features": [...]
   }
 }
 ```
@@ -565,8 +593,8 @@ Cancels a pending or running itinerary generation. Only allows cancellation of i
 - RLS enforces ownership (returns 404 for unauthorized access)
 - Background worker should detect cancellation and stop processing
 
-#### GET /api/itineraries/:itineraryId/gpx
-Downloads a GPX 1.1 file for a completed itinerary. Requires safety disclaimer acknowledgment.
+#### GET /api/itineraries/:itineraryId/download
+Downloads itinerary as GPX 1.1, KML 2.2, or GeoJSON file. Requires safety disclaimer acknowledgment.
 
 **Authentication:** Required (bypassed in dev mode with DEVENV='true')
 
@@ -574,14 +602,24 @@ Downloads a GPX 1.1 file for a completed itinerary. Requires safety disclaimer a
 - `itineraryId` (UUID): ID of the itinerary
 
 **Query Parameters:**
+- `format` (optional, default: "gpx"): Download format - "gpx" | "kml" | "geojson"
 - `acknowledged` (required, must be "true"): User must acknowledge GPS accuracy disclaimer
 
 **Response:**
-- `200 OK`: Success, returns GPX file
-  - `Content-Type: application/gpx+xml`
-  - `Content-Disposition: attachment; filename="route-{title}-{id}.gpx"`
-  - Body: GPX 1.1 XML file
-- `400 Bad Request`: Invalid itineraryId format OR missing/invalid acknowledged parameter
+- `200 OK`: Success, returns file in requested format
+  - **GPX format:**
+    - `Content-Type: application/gpx+xml`
+    - `Content-Disposition: attachment; filename="route-{title}-{id}.gpx"`
+    - Body: GPX 1.1 XML file with waypoints and routes
+  - **KML format:**
+    - `Content-Type: application/vnd.google-earth.kml+xml`
+    - `Content-Disposition: attachment; filename="route-{title}-{id}.kml"`
+    - Body: KML 2.2 XML file compatible with Google Earth
+  - **GeoJSON format:**
+    - `Content-Type: application/geo+json`
+    - `Content-Disposition: attachment; filename="route-{title}-{id}.geojson"`
+    - Body: Pretty-printed GeoJSON FeatureCollection
+- `400 Bad Request`: Invalid parameters or missing acknowledgment
   ```json
   {
     "error": "acknowledgment_required",
@@ -597,17 +635,99 @@ Downloads a GPX 1.1 file for a completed itinerary. Requires safety disclaimer a
     "message": "Cannot download GPX for itinerary with status 'pending'. Only completed itineraries can be downloaded."
   }
   ```
-- `500 Internal Server Error`: GPX generation error
+- `500 Internal Server Error`: Conversion error (GPX/KML generation failed)
+  ```json
+  {
+    "error": "conversion_error",
+    "message": "Failed to convert to GPX: {error details}"
+  }
+  ```
 
 **Notes:**
 - Business rule: Only completed itineraries can be downloaded
 - Requires explicit acknowledgment of GPS accuracy disclaimer via query parameter
-- GPX file generated on-the-fly (not stored)
-- Returns GPX 1.1 format with waypoints and route
+- Files generated on-the-fly from GeoJSON (not stored)
+- **GPX conversion** includes:
+  - Point features as waypoints
+  - LineString features as route points
+  - Metadata from GeoJSON properties
+  - Compatible with Garmin, TomTom, and most GPS devices
+- **KML conversion** includes:
+  - Point features as placemarks with custom icons
+  - LineString features as styled routes
+  - Organized in folders (Waypoints, Route)
+  - Compatible with Google Earth, Google Maps
+- **GeoJSON format**:
+  - Raw FeatureCollection with all properties
+  - Compatible with web mapping libraries (Leaflet, Mapbox)
 - Filename sanitized from itinerary title
-- Coordinates are placeholders in MVP (production would use actual GPS data)
+- GeoJSON is the source of truth; GPX/KML converted on-demand
 - RLS enforces ownership (returns 404 for unauthorized access)
 - Response cached for 1 hour (private cache)
+
+#### GET /api/itineraries/:itineraryId/mapy
+Generates a Mapy.cz URL with route parameters for viewing the itinerary in Mapy.cz web interface. Returns instant response (no file generation).
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary
+
+**Query Parameters:**
+- `acknowledged` (required, must be "true"): User must acknowledge GPS accuracy disclaimer
+
+**Response:**
+- `200 OK`: Success, returns `MapyLinkResponse`
+  ```json
+  {
+    "url": "https://mapy.cz/?route=bike|49.420800,20.941900,Start|49.395200,20.414200,End&lang=en"
+  }
+  ```
+- `400 Bad Request`: Invalid parameters or missing acknowledgment
+  ```json
+  {
+    "error": "acknowledgment_required",
+    "message": "You must acknowledge the GPS accuracy disclaimer by setting acknowledged=true"
+  }
+  ```
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `422 Unprocessable Entity`: Itinerary not completed OR route has too many points
+  ```json
+  {
+    "error": "itinerary_not_completed",
+    "message": "Cannot generate Mapy.cz link for itinerary with status 'pending'. Only completed itineraries can be shared."
+  }
+  ```
+  ```json
+  {
+    "error": "too_many_points",
+    "message": "Route has too many points for Mapy.cz (max 15). Please try downloading GPX instead."
+  }
+  ```
+- `500 Internal Server Error`: Link generation failed
+  ```json
+  {
+    "error": "link_generation_error",
+    "message": "Failed to generate Mapy.cz link: {error details}"
+  }
+  ```
+
+**Notes:**
+- Business rule: Only completed itineraries can be shared
+- Requires explicit acknowledgment of GPS accuracy disclaimer (same as download)
+- Pure synchronous computation (< 10ms response time)
+- URL uses Mapy.cz query-string routing API (no GPX upload needed)
+- **Route format**: `route=<transport>|lat,lon,name|lat,lon,name|...`
+- Transport mode: "bike" (suitable for motorcycles)
+- Mapy.cz limit: Maximum 15 route points
+- **Point sampling**: If route has >15 points, algorithm samples evenly (first + last + middle points)
+- Coordinates rounded to 6 decimal places (~0.1m precision)
+- Point names URL-encoded
+- Language set to English (`lang=en`)
+- RLS enforces ownership (returns 404 for unauthorized access)
+- Response cached for 1 hour (private cache)
+- Alternative to GPX download for quick route preview in Mapy.cz
 
 ### Analytics (Internal/Admin)
 

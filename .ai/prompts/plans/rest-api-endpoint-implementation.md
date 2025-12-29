@@ -3,15 +3,15 @@ Your task is to implement a REST API endpoint based on the provided implementati
 First, carefully review the provided implementation plan:
 
 <implementation_plan>
-{{endpoint-implementation-plan}} <- add reference to endpoint implementation plan (e.g., @generations-endpoint-implementation-plan.md)
+{{endpoint_name}}-endpoint-implementation-plan.md 
 </implementation_plan>
 
 <types>
-{{types}} <- add reference to type definitions (e.g., @types)
+@types.ts 
 </types>
 
 <implementation_rules>
-{{backend-rules}} <- add reference to backend rules (e.g., @shared.mdc, @backend.mdc, @astro.mdc)
+@shared.mdc @backend.mdc @astro.mdc 
 </implementation_rules>
 
 <implementation_approach>
@@ -54,4 +54,7 @@ After completing the implementation, ensure it includes all necessary imports, f
 
 If you need to make any assumptions or have any questions about the implementation plan, present them before writing code.
 
+After finishing **whole** plan create summary in @.ai/api/ {{endpoint_name}}-endpoint-implementation-summary.md 
+
 Remember to follow REST API design best practices, adhere to programming language style guidelines, and ensure the code is clean, readable, and well-organized.
+

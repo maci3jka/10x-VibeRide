@@ -25,6 +25,8 @@ For development purposes authentication MUST have option to be disabled. it shou
 | `/api/itineraries/:itineraryId/status` | GET | ✅ Implemented | December 6, 2024 |
 | `/api/itineraries/:itineraryId/cancel` | POST | ✅ Implemented | December 6, 2024 |
 | `/api/itineraries/:itineraryId/gpx` | GET | ✅ Implemented | December 6, 2024 |
+| `/api/itineraries/:itineraryId/download` | GET | ✅ Implemented | December 2024 |
+| `/api/itineraries/:itineraryId/mapy` | GET | ✅ Implemented | December 29, 2024 |
 | `/api/analytics/users/stats` | GET | ✅ Implemented | December 7, 2024 |
 | `/api/analytics/generations/stats` | GET | ✅ Implemented | December 7, 2024 |
 | `/api/health` | GET | ✅ Implemented | December 7, 2024 |
@@ -36,7 +38,7 @@ For development purposes authentication MUST have option to be disabled. it shou
 **Implementation Summary:**
 - **User Preferences**: Complete (GET, PUT) - Full CRUD with validation
 - **Notes**: Complete (GET list, POST create, GET by ID, PUT, DELETE) - Full CRUD with search/pagination, validation, and soft delete
-- **Itineraries**: Complete (GET by ID, GET list, POST generate, DELETE, GET status, POST cancel, GET gpx) - Full CRUD with generation, status polling, cancellation, and GPX download
+- **Itineraries**: Complete (GET by ID, GET list, POST generate, DELETE, GET status, POST cancel, GET download, GET mapy) - Full CRUD with generation, status polling, cancellation, GPX/KML/GeoJSON download, and Mapy.cz link generation
 - **Analytics**: Complete (GET users/stats, GET generations/stats) - Internal admin endpoints with date range filtering
 - **Health**: Complete (GET /api/health) - Public health check endpoint with concurrent DB/Auth checks
 
@@ -844,6 +846,63 @@ For development purposes authentication MUST have option to be disabled. it shou
   - `404` Not Found - Itinerary does not exist
   - `422` Unprocessable Entity - Itinerary generation failed or incomplete
   - `500` Internal Server Error
+
+#### Generate Mapy.cz Link
+- **Method**: `GET`
+- **Path**: `/api/itineraries/:itineraryId/mapy`
+- **Description**: Generates a Mapy.cz URL with route parameters for viewing itinerary in web interface
+- **Auth**: Required
+- **Path Parameters**:
+  - `itineraryId` (uuid, required) - Itinerary identifier
+- **Query Parameters**:
+  - `acknowledged` (boolean, required) - Safety disclaimer acknowledgment (must be "true")
+- **Request Body**: None
+- **Response**:
+  ```json
+  {
+    "url": "https://mapy.cz/?route=bike|49.420800,20.941900,Start|49.395200,20.414200,End&lang=en"
+  }
+  ```
+- **Success**: `200` OK
+  - Content-Type: `application/json`
+  - Cache-Control: `private, max-age=3600`
+- **Errors**:
+  - `400` Bad Request - Safety disclaimer not acknowledged
+    ```json
+    {
+      "error": "acknowledgment_required",
+      "message": "You must acknowledge the GPS accuracy disclaimer by setting acknowledged=true"
+    }
+    ```
+  - `401` Unauthorized - Not authenticated
+  - `404` Not Found - Itinerary does not exist or belongs to different user
+  - `422` Unprocessable Entity - Itinerary not completed or route has too many points
+    ```json
+    {
+      "error": "itinerary_not_completed",
+      "message": "Cannot generate Mapy.cz link for itinerary with status 'pending'. Only completed itineraries can be shared."
+    }
+    ```
+    ```json
+    {
+      "error": "too_many_points",
+      "message": "Route has too many points for Mapy.cz (max 15). Please try downloading GPX instead."
+    }
+    ```
+  - `500` Internal Server Error - Link generation failed
+- **Implementation Details**:
+  - Pure synchronous computation (< 10ms response time)
+  - URL format: `route=<transport>|lat,lon,name|lat,lon,name|...`
+  - Transport mode: "bike" (suitable for motorcycles)
+  - Mapy.cz limit: Maximum 15 route points
+  - Point sampling: If route has >15 points, samples evenly (first + last + middle points)
+  - Coordinates rounded to 6 decimal places (~0.1m precision)
+  - Point names URL-encoded
+  - Language set to English (`lang=en`)
+  - Service: `src/lib/services/mapyLinkService.ts`
+  - Validator: Reuses patterns from download endpoint
+  - Tests: `src/lib/services/mapyLinkService.test.ts` (11 tests)
+  - Implementation summary: `.ai/api/mapy-link-endpoint-implementation-summary.md`
 
 #### Delete Itinerary
 - **Method**: `DELETE`

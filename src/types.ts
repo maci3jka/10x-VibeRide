@@ -78,9 +78,90 @@ export interface Note {
 }
 
 /**
+ * GeoJSON Geometry Types
+ * Based on RFC 7946 GeoJSON specification
+ */
+export type GeoJSONGeometryType = "Point" | "LineString" | "Polygon" | "MultiPoint" | "MultiLineString" | "MultiPolygon";
+
+/**
+ * GeoJSON Point Geometry
+ * Represents a single location with [longitude, latitude] coordinates
+ */
+export interface GeoJSONPoint {
+  type: "Point";
+  coordinates: [number, number]; // [longitude, latitude]
+}
+
+/**
+ * GeoJSON LineString Geometry
+ * Represents a path/route as an array of coordinates
+ */
+export interface GeoJSONLineString {
+  type: "LineString";
+  coordinates: [number, number][]; // Array of [longitude, latitude]
+}
+
+/**
+ * GeoJSON Geometry Union
+ * Supports Point (waypoints) and LineString (routes)
+ */
+export type GeoJSONGeometry = GeoJSONPoint | GeoJSONLineString;
+
+/**
+ * GeoJSON Feature Properties
+ * Custom properties for route segments and waypoints
+ */
+export interface GeoJSONFeatureProperties {
+  name?: string; // Feature name (e.g., "Segment 1", "Waypoint A")
+  description?: string; // Feature description
+  type?: "route" | "waypoint" | "poi"; // Feature type
+  day?: number; // Day number for multi-day trips
+  segment?: number; // Segment number within a day
+  distance_km?: number; // Distance for this segment
+  duration_h?: number; // Duration for this segment
+  [key: string]: unknown; // Allow additional custom properties
+}
+
+/**
+ * GeoJSON Feature
+ * Represents a single geographic feature (route segment or waypoint)
+ */
+export interface GeoJSONFeature {
+  type: "Feature";
+  geometry: GeoJSONGeometry;
+  properties: GeoJSONFeatureProperties;
+  id?: string | number; // Optional feature identifier
+}
+
+/**
+ * Route GeoJSON Properties
+ * Top-level properties for the FeatureCollection
+ */
+export interface RouteGeoJSONProperties {
+  title: string; // Trip title (max 60 characters)
+  total_distance_km: number; // Total trip distance
+  total_duration_h: number; // Total trip duration
+  highlights?: string[]; // Notable points of interest
+  days?: number; // Number of days in the trip
+  [key: string]: unknown; // Allow additional custom properties
+}
+
+/**
+ * Route GeoJSON FeatureCollection
+ * Primary route format stored in itineraries.route_geojson
+ * Contains route geometry (LineStrings) and optional waypoints (Points)
+ */
+export interface RouteGeoJSON {
+  type: "FeatureCollection";
+  properties: RouteGeoJSONProperties;
+  features: GeoJSONFeature[];
+}
+
+/**
  * Itinerary Entity
  * Maps to viberide.itineraries table
  * Stores AI-generated itineraries with versioning and status tracking
+ * Uses GeoJSON as the primary route format
  */
 export interface Itinerary {
   itinerary_id: string; // uuid - primary key
@@ -88,8 +169,10 @@ export interface Itinerary {
   user_id: string; // uuid - references auth.users(id)
   version: number; // int - version number for this note
   status: ItineraryStatus;
-  summary_json: ItinerarySummaryJSON; // jsonb - complete itinerary structure
-  gpx_metadata: GPXMetadata | null; // jsonb - metadata for GPX generation
+  route_geojson: RouteGeoJSON; // jsonb - GeoJSON FeatureCollection (single source of truth)
+  title: string | null; // text - trip title (derived from route_geojson)
+  total_distance_km: number | null; // numeric(9,1) - total distance (derived from route_geojson)
+  total_duration_h: number | null; // numeric(7,1) - total duration (derived from route_geojson)
   request_id: string; // uuid - idempotency key for generation request
   created_at: string; // timestamptz (ISO 8601 string)
   updated_at: string; // timestamptz (ISO 8601 string)
@@ -125,9 +208,11 @@ export interface AISummary {
 }
 
 /**
+ * @deprecated Legacy type - replaced by RouteGeoJSON
  * Itinerary Summary JSON
- * Structure stored in itineraries.summary_json (JSONB field)
+ * Structure previously stored in itineraries.summary_json (JSONB field)
  * Contains the complete AI-generated itinerary structure
+ * Kept for backward compatibility during migration
  */
 export interface ItinerarySummaryJSON {
   title: string; // Trip title
@@ -138,6 +223,7 @@ export interface ItinerarySummaryJSON {
 }
 
 /**
+ * @deprecated Legacy type - replaced by GeoJSON features
  * Itinerary Day
  * Represents a single day within an itinerary
  * Part of ItinerarySummaryJSON.days array
@@ -148,6 +234,7 @@ export interface ItineraryDay {
 }
 
 /**
+ * @deprecated Legacy type - replaced by GeoJSON features with properties
  * Itinerary Segment
  * Represents a single segment/leg within a day
  * Part of ItineraryDay.segments array
@@ -157,11 +244,16 @@ export interface ItinerarySegment {
   description: string; // Detailed description
   distance_km: number; // Segment distance
   duration_h: number; // Segment duration
+  start_lat?: number; // Starting latitude (decimal degrees)
+  start_lon?: number; // Starting longitude (decimal degrees)
+  end_lat?: number; // Ending latitude (decimal degrees)
+  end_lon?: number; // Ending longitude (decimal degrees)
 }
 
 /**
+ * @deprecated Legacy type - GPX is now generated on-demand from GeoJSON
  * GPX Metadata
- * Structure stored in itineraries.gpx_metadata (JSONB field)
+ * Structure previously stored in itineraries.gpx_metadata (JSONB field)
  * Contains metadata needed for GPX file generation
  */
 export interface GPXMetadata {
@@ -344,7 +436,7 @@ export type ItineraryStatusResponse =
   | {
       itinerary_id: string;
       status: "completed";
-      summary_json: ItinerarySummaryJSON; // Full itinerary on completion
+      route_geojson: RouteGeoJSON; // Full GeoJSON route on completion
     }
   | {
       itinerary_id: string;
@@ -375,6 +467,14 @@ export interface DeleteItineraryResponse {
   success: true;
   itinerary_id: string;
   deleted_at: string;
+}
+
+/**
+ * Response for generating Mapy.cz link
+ * Used in: GET /api/itineraries/:itineraryId/mapy
+ */
+export interface MapyLinkResponse {
+  url: string; // Fully-formed Mapy.cz URL with route parameters
 }
 
 // ──────────────────────────────────────────────────────────────────────────

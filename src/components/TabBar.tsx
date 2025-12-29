@@ -1,4 +1,4 @@
-import { FileText, User } from "lucide-react";
+import { FileText, User, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TabBarProps {
@@ -16,6 +16,11 @@ const tabs: TabItem[] = [
     path: "/notes",
     label: "Notes",
     icon: <FileText className="h-5 w-5" />,
+  },
+  {
+    path: "/generate",
+    label: "Generate",
+    icon: <Sparkles className="h-5 w-5" />,
   },
   {
     path: "/profile",
