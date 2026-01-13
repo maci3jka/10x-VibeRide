@@ -265,3 +265,4 @@ New log entries for tracking:
 4. **Retry Logic**: Auto-retry with shorter segments if truncation occurs
 5. **Quality Scoring**: Rate itinerary quality and suggest improvements
 
+

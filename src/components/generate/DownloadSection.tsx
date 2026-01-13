@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import type { DownloadFormat } from "@/lib/hooks/useGenerate";
-import type { ErrorResponse, MapyLinkResponse } from "@/types";
+import type { ErrorResponse, MapyLinkResponse, GoogleMapsLinkResponse } from "@/types";
 
 interface DownloadSectionProps {
   onDownload: (acknowledged: boolean, format: DownloadFormat) => void;
@@ -23,6 +23,7 @@ export function DownloadSection({ onDownload, itineraryId }: DownloadSectionProp
   const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<DownloadFormat>("gpx");
   const [isMapyLoading, setIsMapyLoading] = useState(false);
+  const [isGoogleMapsLoading, setIsGoogleMapsLoading] = useState(false);
 
   const handleDownloadClick = () => {
     setShowDisclaimer(true);
@@ -88,6 +89,50 @@ export function DownloadSection({ onDownload, itineraryId }: DownloadSectionProp
       toast.error("Network error. Failed to open Mapy.cz.");
     } finally {
       setIsMapyLoading(false);
+    }
+  };
+
+  const handleGoogleMapsClick = async () => {
+    if (isGoogleMapsLoading) {
+      return;
+    }
+
+    setIsGoogleMapsLoading(true);
+
+    try {
+      const response = await window.fetch(`/api/itineraries/${itineraryId}/google?acknowledged=true`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        // Handle 401 - session expired
+        if (response.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        // Handle 422 - too many points
+        if (response.status === 422) {
+          toast.error("Route contains too many points for Google Maps quick preview. Download GPX instead.");
+          return;
+        }
+
+        const errorData: ErrorResponse = await response.json();
+        toast.error(errorData.message || "Failed to open Google Maps. Please try again.");
+        return;
+      }
+
+      const result: GoogleMapsLinkResponse = await response.json();
+      
+      // Open Google Maps link in new tab
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Network error. Failed to open Google Maps.");
+    } finally {
+      setIsGoogleMapsLoading(false);
     }
   };
 
@@ -202,6 +247,24 @@ export function DownloadSection({ onDownload, itineraryId }: DownloadSectionProp
               </>
             )}
             Mapy.cz
+          </Button>
+
+          <Button 
+            onClick={handleGoogleMapsClick} 
+            className="w-full h-10" 
+            variant="outline"
+            disabled={isGoogleMapsLoading}
+            title="Open route in Google Maps"
+          >
+            {isGoogleMapsLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <MapIcon className="mr-2 h-4 w-4" />
+                <ExternalLink className="mr-1 h-3 w-3" />
+              </>
+            )}
+            Google
           </Button>
         </CardFooter>
       )}

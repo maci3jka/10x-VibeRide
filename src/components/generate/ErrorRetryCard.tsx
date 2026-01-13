@@ -39,5 +39,3 @@ export function ErrorRetryCard({ error, onRetry }: ErrorRetryCardProps) {
     </Card>
   );
 }
-
-

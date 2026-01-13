@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import type { ItineraryListItemResponse, RouteGeoJSON, GeoJSONFeature, ErrorResponse, MapyLinkResponse } from "@/types";
+import type { ItineraryListItemResponse, RouteGeoJSON, GeoJSONFeature, ErrorResponse, MapyLinkResponse, GoogleMapsLinkResponse } from "@/types";
 import { extractSummary, type ExtractedSummary } from "@/lib/services/geojsonService";
 
 interface PastItinerariesSectionProps {
@@ -77,6 +77,7 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [downloadFormat, setDownloadFormat] = useState<"gpx" | "kml" | "geojson">("gpx");
   const [isMapyLoading, setIsMapyLoading] = useState(false);
+  const [isGoogleMapsLoading, setIsGoogleMapsLoading] = useState(false);
 
   // Extract summary from GeoJSON
   let summary: ExtractedSummary | null = null;
@@ -158,6 +159,50 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
     }
   };
 
+  const handleGoogleMapsClick = async () => {
+    if (isGoogleMapsLoading) {
+      return;
+    }
+
+    setIsGoogleMapsLoading(true);
+
+    try {
+      const response = await window.fetch(`/api/itineraries/${itinerary.itinerary_id}/google?acknowledged=true`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        // Handle 401 - session expired
+        if (response.status === 401) {
+          window.location.href = "/";
+          return;
+        }
+
+        // Handle 422 - too many points
+        if (response.status === 422) {
+          toast.error("Route contains too many points for Google Maps quick preview. Download GPX instead.");
+          return;
+        }
+
+        const errorData: ErrorResponse = await response.json();
+        toast.error(errorData.message || "Failed to open Google Maps. Please try again.");
+        return;
+      }
+
+      const result: GoogleMapsLinkResponse = await response.json();
+      
+      // Open in new tab
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Network error. Failed to open Google Maps.");
+    } finally {
+      setIsGoogleMapsLoading(false);
+    }
+  };
+
   // Fallback if no summary available
   if (!summary) {
     return (
@@ -210,7 +255,7 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
               Download
             </Button>
           </div>
-          <div className="flex justify-end">
+          <div className="flex items-center gap-2 justify-end">
             <Button
               variant="outline"
               size="sm"
@@ -228,6 +273,26 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
                 </>
               )}
               Mapy.cz
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleGoogleMapsClick}
+              disabled={isGoogleMapsLoading}
+              className="h-8 w-[130px]"
+              title="Open route in Google Maps"
+            >
+              {isGoogleMapsLoading ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : (
+                <>
+                  <MapIcon className="h-3 w-3 mr-1" />
+                  <ExternalLink className="h-2 w-2 mr-1" />
+                </>
+              )}
+              Google
             </Button>
           </div>
         </div>

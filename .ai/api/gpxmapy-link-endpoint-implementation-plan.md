@@ -75,3 +75,4 @@ Error scenarios follow the standard `ErrorResponse` shape (`error`, `message`, o
 5. **Integration Tests** – route tests for 200, 400, 422 cases.
 6. **Docs** – Update OpenAPI & markdown docs (.ai/api) when implemented.
 
+

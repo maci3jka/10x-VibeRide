@@ -155,3 +155,4 @@ Potential improvements:
 - `src/lib/services/gpxService.test.ts` - GPX service tests
 - `src/pages/api/itineraries/[itineraryId]/gpx.ts` - Download endpoint with validation
 
+

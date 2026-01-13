@@ -477,6 +477,14 @@ export interface MapyLinkResponse {
   url: string; // Fully-formed Mapy.cz URL with route parameters
 }
 
+/**
+ * Response for generating Google Maps link
+ * Used in: GET /api/itineraries/:itineraryId/google
+ */
+export interface GoogleMapsLinkResponse {
+  url: string; // Fully-formed Google Maps URL with route parameters
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // 5.4 Analytics Responses (Internal/Admin)
 // ──────────────────────────────────────────────────────────────────────────

@@ -182,4 +182,3 @@ Tests run automatically in CI/CD pipeline:
 - [Vitest Documentation](https://vitest.dev/)
 - [React Testing Library](https://testing-library.com/react)
 - [Testing Best Practices](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
-

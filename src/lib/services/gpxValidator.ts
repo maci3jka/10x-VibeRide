@@ -159,3 +159,4 @@ export function assertValidGpx(gpxContent: string): void {
   }
 }
 
+

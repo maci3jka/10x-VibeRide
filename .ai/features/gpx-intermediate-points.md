@@ -204,3 +204,4 @@ where t ∈ [0, 1]
 - `src/lib/services/itineraryService.ts` - Enhanced AI prompt
 - `src/types.ts` - Segment type definitions (includes GPS coordinates)
 
+

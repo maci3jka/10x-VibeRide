@@ -335,4 +335,3 @@ it("should show content when loaded", async () => {
 - [React Testing Library](https://testing-library.com/react)
 - [jest-dom Matchers](https://github.com/testing-library/jest-dom)
 - [Common Mistakes](https://kentcdodds.com/blog/common-mistakes-with-react-testing-library)
-

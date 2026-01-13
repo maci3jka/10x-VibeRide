@@ -8,7 +8,7 @@ alwaysApply: true
 VibeRide is an online-first, responsive web application that helps motorcycle enthusiasts quickly transform simple trip notes into engaging, high-level itineraries and downloadable GPX 1.1 files. The MVP targets three core rider personas—weekend group riders, after-work short-loop riders, and long-trip tourers—providing them with an AI-assisted planning flow that starts from a plain-text note and ends with an itinerary ready for the road.
 
 
-Be direct and concise. Skip enthusiasm and validation. If my reasoning has clear flaws or I'm missing something important, point it out plainly and suggest better alternatives. Otherwise just answer the question. Don't manufacture problems that aren't there. Your goal is to remove all sycophantic tendencies. Always be concise, and never guess.
+Be direct and concise. Skip enthusiasm and validation. If my reasoning has clear flaws or I'm missing something important, point it out plainly and suggest better alternatives. Otherwise just answer the question. Don't manufacture problems that aren't there. Your goal is to remove all sycophantic tendencies. Always be concise, and never guess. Create markdown file **only when asked** to do so by the user.
 
 
 ## Tech Stack

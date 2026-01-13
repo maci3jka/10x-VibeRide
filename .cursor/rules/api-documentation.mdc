@@ -729,6 +729,70 @@ Generates a Mapy.cz URL with route parameters for viewing the itinerary in Mapy.
 - Response cached for 1 hour (private cache)
 - Alternative to GPX download for quick route preview in Mapy.cz
 
+#### GET /api/itineraries/:itineraryId/google
+Generates a Google Maps URL with route parameters for viewing the itinerary in Google Maps web interface. Returns instant response (no file generation).
+
+**Authentication:** Required (bypassed in dev mode with DEVENV='true')
+
+**Path Parameters:**
+- `itineraryId` (UUID): ID of the itinerary
+
+**Query Parameters:**
+- `acknowledged` (required, must be "true"): User must acknowledge GPS accuracy disclaimer
+
+**Response:**
+- `200 OK`: Success, returns `GoogleMapsLinkResponse`
+  ```json
+  {
+    "url": "https://www.google.com/maps/dir/?api=1&origin=49.420800,20.941900&destination=49.395200,20.414200&travelmode=driving"
+  }
+  ```
+- `400 Bad Request`: Invalid parameters or missing acknowledgment
+  ```json
+  {
+    "error": "acknowledgment_required",
+    "message": "You must acknowledge the GPS accuracy disclaimer by setting acknowledged=true"
+  }
+  ```
+- `401 Unauthorized`: Not authenticated
+- `404 Not Found`: Itinerary does not exist, has been deleted, or belongs to another user
+- `422 Unprocessable Entity`: Itinerary not completed OR route has too many points
+  ```json
+  {
+    "error": "itinerary_not_completed",
+    "message": "Cannot generate Google Maps link for itinerary with status 'pending'. Only completed itineraries can be shared."
+  }
+  ```
+  ```json
+  {
+    "error": "too_many_points",
+    "message": "Route has too many points for Google Maps (max 25). Please try downloading GPX instead."
+  }
+  ```
+- `500 Internal Server Error`: Link generation failed
+  ```json
+  {
+    "error": "link_generation_error",
+    "message": "Failed to generate Google Maps link: {error details}"
+  }
+  ```
+
+**Notes:**
+- Business rule: Only completed itineraries can be shared
+- Requires explicit acknowledgment of GPS accuracy disclaimer (same as download)
+- Pure synchronous computation (< 10ms response time)
+- URL uses Google Maps Directions API URL format
+- Travel mode: "driving" (suitable for motorcycles)
+- Google Maps limit: Maximum 25 route points
+- **Point sampling**: If route has >25 points, algorithm samples evenly (origin + waypoints + destination)
+- Coordinates automatically swapped from GeoJSON [lon, lat] to Google Maps [lat, lon] format
+- Coordinates rounded to 6 decimal places (~0.1m precision)
+- Waypoints separated by pipe (|) character
+- Multi-day routes automatically merged into single continuous route
+- RLS enforces ownership (returns 404 for unauthorized access)
+- Response cached for 1 hour (private cache)
+- Alternative to GPX download for quick route preview in Google Maps
+
 ### Analytics (Internal/Admin)
 
 #### GET /api/analytics/users/stats
