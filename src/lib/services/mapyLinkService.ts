@@ -43,13 +43,13 @@ const ROUTE_TYPE_MAP: Record<MapyTransportMode, string> = {
 /**
  * Builds a Mapy.cz URL with route parameters from GeoJSON
  * Uses the Mapy.cz fnc/v1/route API format
- * 
+ *
  * Algorithm:
  * 1. Extract coordinates from the first LineString feature
  * 2. Sample points to stay within maxPoints limit (first + last + evenly-spaced middle)
  * 3. Build route URL with start, end, and waypoints parameters
  * 4. URL-encode and assemble final Mapy.cz URL
- * 
+ *
  * @param geojson Valid GeoJSON FeatureCollection with route data
  * @param transport Transport mode (default: "car")
  * @param maxPoints Maximum number of points (default: 15, Mapy.cz limit)
@@ -57,11 +57,7 @@ const ROUTE_TYPE_MAP: Record<MapyTransportMode, string> = {
  * @throws TooManyPointsError if route exceeds maxPoints after sampling
  * @throws LinkGenerationError if route data is invalid or missing
  */
-export function buildLink(
-  geojson: RouteGeoJSON,
-  transport: MapyTransportMode = "car",
-  maxPoints: number = 15
-): string {
+export function buildLink(geojson: RouteGeoJSON, transport: MapyTransportMode = "car", maxPoints = 15): string {
   try {
     // Step 1: Find all LineString features and merge their coordinates
     const lineStringFeatures = geojson.features.filter((f) => f.geometry.type === "LineString");
@@ -72,12 +68,12 @@ export function buildLink(
 
     // Merge all LineString coordinates into a single array
     // For multi-day routes, we have multiple segments that need to be combined
-    let allCoordinates: [number, number][] = [];
-    
+    const allCoordinates: [number, number][] = [];
+
     for (const feature of lineStringFeatures) {
       if (feature.geometry.type === "LineString") {
         const coords = feature.geometry.coordinates;
-        
+
         // If this is not the first segment, skip the first coordinate to avoid duplicates
         // (the last point of previous segment should match the first point of next segment)
         if (allCoordinates.length > 0 && coords.length > 0) {
@@ -105,7 +101,7 @@ export function buildLink(
 
     // Step 3: Build route URL using Mapy.cz fnc/v1/route API
     // Format: start=lon,lat&end=lon,lat&waypoints=lon,lat;lon,lat;...&routeType=bike_road
-    
+
     if (sampledPoints.length < 2) {
       throw new LinkGenerationError("Route must have at least 2 points after sampling");
     }
@@ -113,17 +109,17 @@ export function buildLink(
     // First point is start, last point is end, middle points are waypoints
     const [startLon, startLat] = sampledPoints[0];
     const [endLon, endLat] = sampledPoints[sampledPoints.length - 1];
-    
+
     // Round to 6 decimal places (~0.1m precision)
     const startCoord = `${startLon.toFixed(6)},${startLat.toFixed(6)}`;
     const endCoord = `${endLon.toFixed(6)},${endLat.toFixed(6)}`;
-    
+
     // Build URL parameters
     const params = new URLSearchParams();
     params.set("start", startCoord);
     params.set("end", endCoord);
     params.set("routeType", ROUTE_TYPE_MAP[transport]);
-    
+
     // Add waypoints if there are middle points
     if (sampledPoints.length > 2) {
       const waypoints = sampledPoints
@@ -162,7 +158,7 @@ export function buildLink(
 /**
  * Samples points from a coordinate array to fit within maxPoints limit
  * Always includes first and last point, then evenly spaces middle points
- * 
+ *
  * @param coordinates Array of [lon, lat] coordinates
  * @param maxPoints Maximum number of points to return
  * @returns Sampled array of coordinates
@@ -173,7 +169,7 @@ function samplePoints(coordinates: [number, number][], maxPoints: number): [numb
   }
 
   const sampled: [number, number][] = [];
-  
+
   // Always include first point
   sampled.push(coordinates[0]);
 
@@ -196,4 +192,3 @@ function samplePoints(coordinates: [number, number][], maxPoints: number): [numb
 
   return sampled;
 }
-

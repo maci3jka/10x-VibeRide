@@ -86,6 +86,7 @@ export function useProfileState() {
     setForm((prev) => ({ ...prev, [field]: value }));
     // Clear error for this field
     setErrors((prev) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [field]: _, ...rest } = prev;
       return rest;
     });

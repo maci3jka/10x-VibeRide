@@ -84,15 +84,12 @@ describe("usePastItineraries", () => {
       renderHook(() => usePastItineraries(noteId));
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          `/api/notes/${noteId}/itineraries?status=completed&limit=10`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        expect(mockFetch).toHaveBeenCalledWith(`/api/notes/${noteId}/itineraries?status=completed&limit=10`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
       });
     });
   });
@@ -371,10 +368,7 @@ describe("usePastItineraries", () => {
         json: async () => ({ data: [mockItineraries[0]] }),
       });
 
-      const { rerender } = renderHook(
-        ({ id }) => usePastItineraries(id),
-        { initialProps: { id: "note-1" } }
-      );
+      const { rerender } = renderHook(({ id }) => usePastItineraries(id), { initialProps: { id: "note-1" } });
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(1);
@@ -403,10 +397,7 @@ describe("usePastItineraries", () => {
         json: async () => ({ data: mockItineraries }),
       });
 
-      const { result, rerender } = renderHook(
-        ({ id }) => usePastItineraries(id),
-        { initialProps: { id: noteId } }
-      );
+      const { result, rerender } = renderHook(({ id }) => usePastItineraries(id), { initialProps: { id: noteId } });
 
       await waitFor(() => {
         expect(result.current.itineraries).toHaveLength(3);
@@ -419,10 +410,7 @@ describe("usePastItineraries", () => {
     });
 
     it("should not fetch when noteId changes from undefined to undefined", () => {
-      const { rerender } = renderHook(
-        ({ id }) => usePastItineraries(id),
-        { initialProps: { id: undefined } }
-      );
+      const { rerender } = renderHook(({ id }) => usePastItineraries(id), { initialProps: { id: undefined } });
 
       expect(mockFetch).not.toHaveBeenCalled();
 
@@ -558,10 +546,7 @@ describe("usePastItineraries", () => {
         json: async () => ({ data: [] }),
       });
 
-      const { rerender } = renderHook(
-        ({ id }) => usePastItineraries(id),
-        { initialProps: { id: "note-1" } }
-      );
+      const { rerender } = renderHook(({ id }) => usePastItineraries(id), { initialProps: { id: "note-1" } });
 
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(1);

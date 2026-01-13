@@ -11,8 +11,7 @@ interface NotePreviewCardProps {
  */
 export function NotePreviewCard({ note }: NotePreviewCardProps) {
   // Truncate note text to first 200 characters for preview
-  const snippet =
-    note.note_text.length > 200 ? `${note.note_text.substring(0, 200)}...` : note.note_text;
+  const snippet = note.note_text.length > 200 ? `${note.note_text.substring(0, 200)}...` : note.note_text;
 
   return (
     <Card>
@@ -26,6 +25,3 @@ export function NotePreviewCard({ note }: NotePreviewCardProps) {
     </Card>
   );
 }
-
-
-

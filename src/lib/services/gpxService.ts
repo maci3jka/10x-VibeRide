@@ -8,51 +8,52 @@ import { assertValidGpx } from "./gpxValidator";
 
 /**
  * Generates a GPX 1.1 XML string from an itinerary
- * 
+ *
  * Note: This is a simplified GPX generation for MVP.
  * Since the itinerary doesn't contain actual GPS coordinates,
  * we generate waypoints with placeholder coordinates based on segment names.
- * 
+ *
  * In production, this would:
  * - Use actual GPS coordinates from route planning
  * - Include elevation data
  * - Add track points between waypoints
  * - Include proper route metadata
- * 
+ *
  * @param itinerary The itinerary summary to convert to GPX
  * @param itineraryId The ID of the itinerary (used in metadata)
  * @returns GPX 1.1 XML string
  */
-export function generateGPX(itinerary: ItinerarySummaryJSON, itineraryId: string): string {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function generateGPX(itinerary: ItinerarySummaryJSON, _itineraryId?: string): string {
   const now = new Date().toISOString();
-  
+
   // Validate itinerary has required fields
   if (!itinerary || !itinerary.days || !Array.isArray(itinerary.days)) {
     throw new Error("Invalid itinerary: missing days array");
   }
-  
+
   // Extract waypoints from segments with GPS coordinates
   // Generate intermediate points for better route guidance
-  const waypoints: Array<{ 
-    name: string; 
-    description: string; 
-    lat: number; 
+  const waypoints: {
+    name: string;
+    description: string;
+    lat: number;
     lon: number;
     index: number;
-    type: 'start' | 'intermediate' | 'end';
-  }> = [];
+    type: "start" | "intermediate" | "end";
+  }[] = [];
   let waypointIndex = 0;
-  
+
   itinerary.days.forEach((day) => {
     if (day.segments && Array.isArray(day.segments)) {
       day.segments.forEach((segment, segmentIdx) => {
         // Use start coordinates for the waypoint
         // If no coordinates provided, use placeholder
-        const startLat = segment.start_lat ?? (45.0 + waypointIndex * 0.1);
-        const startLon = segment.start_lon ?? (-93.0 + waypointIndex * 0.1);
-        const endLat = segment.end_lat ?? (45.0 + (waypointIndex + 1) * 0.1);
-        const endLon = segment.end_lon ?? (-93.0 + (waypointIndex + 1) * 0.1);
-        
+        const startLat = segment.start_lat ?? 45.0 + waypointIndex * 0.1;
+        const startLon = segment.start_lon ?? -93.0 + waypointIndex * 0.1;
+        const endLat = segment.end_lat ?? 45.0 + (waypointIndex + 1) * 0.1;
+        const endLon = segment.end_lon ?? -93.0 + (waypointIndex + 1) * 0.1;
+
         // Add start point
         waypoints.push({
           name: segment.name || "Unnamed waypoint",
@@ -60,33 +61,33 @@ export function generateGPX(itinerary: ItinerarySummaryJSON, itineraryId: string
           lat: startLat,
           lon: startLon,
           index: waypointIndex++,
-          type: 'start',
+          type: "start",
         });
-        
+
         // Generate intermediate points along the segment
         // More points for longer segments (based on distance)
         const distance = segment.distance_km || 0;
         const numIntermediatePoints = calculateIntermediatePoints(distance);
-        
+
         if (numIntermediatePoints > 0) {
           for (let i = 1; i <= numIntermediatePoints; i++) {
             const ratio = i / (numIntermediatePoints + 1);
             const intermediateLat = startLat + (endLat - startLat) * ratio;
             const intermediateLon = startLon + (endLon - startLon) * ratio;
-            
+
             waypoints.push({
               name: `${segment.name} - Point ${i}`,
               description: `Intermediate waypoint along ${segment.name}`,
               lat: intermediateLat,
               lon: intermediateLon,
               index: waypointIndex++,
-              type: 'intermediate',
+              type: "intermediate",
             });
           }
         }
-        
+
         // Add end point (except for last segment where we'll add it separately)
-        const isLastSegment = segmentIdx === day.segments!.length - 1;
+        const isLastSegment = day.segments ? segmentIdx === day.segments.length - 1 : true;
         if (!isLastSegment) {
           waypoints.push({
             name: `${segment.name} - End`,
@@ -94,24 +95,24 @@ export function generateGPX(itinerary: ItinerarySummaryJSON, itineraryId: string
             lat: endLat,
             lon: endLon,
             index: waypointIndex++,
-            type: 'end',
+            type: "end",
           });
         }
       });
-      
+
       // Add the end point of the last segment as final waypoint for the day
       const lastSegment = day.segments[day.segments.length - 1];
       if (lastSegment) {
-        const endLat = lastSegment.end_lat ?? (45.0 + waypointIndex * 0.1);
-        const endLon = lastSegment.end_lon ?? (-93.0 + waypointIndex * 0.1);
-        
+        const endLat = lastSegment.end_lat ?? 45.0 + waypointIndex * 0.1;
+        const endLon = lastSegment.end_lon ?? -93.0 + waypointIndex * 0.1;
+
         waypoints.push({
           name: `End of Day ${day.day}`,
           description: "Day endpoint",
           lat: endLat,
           lon: endLon,
           index: waypointIndex++,
-          type: 'end',
+          type: "end",
         });
       }
     }
@@ -121,7 +122,7 @@ export function generateGPX(itinerary: ItinerarySummaryJSON, itineraryId: string
   const title = itinerary.title || "Untitled Itinerary";
   const totalDistance = itinerary.total_distance_km || 0;
   const totalDuration = itinerary.total_duration_h || 0;
-  
+
   const gpxXml = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx version="1.1" 
      creator="VibeRide - https://viberide.com" 
@@ -157,14 +158,14 @@ ${generateRoutePoints(waypoints)}
 /**
  * Calculate number of intermediate points based on segment distance
  * More points for longer segments to ensure proper road guidance
- * 
+ *
  * @param distanceKm Distance of the segment in kilometers
  * @returns Number of intermediate points to generate
  */
 function calculateIntermediatePoints(distanceKm: number): number {
-  if (distanceKm < 20) return 1;      // Short segments: 1 intermediate point
-  if (distanceKm < 50) return 2;      // Medium segments: 2 intermediate points
-  if (distanceKm < 100) return 3;     // Long segments: 3 intermediate points
+  if (distanceKm < 20) return 1; // Short segments: 1 intermediate point
+  if (distanceKm < 50) return 2; // Medium segments: 2 intermediate points
+  if (distanceKm < 100) return 3; // Long segments: 3 intermediate points
   return Math.min(5, Math.floor(distanceKm / 30)); // Very long: up to 5 points
 }
 
@@ -173,9 +174,11 @@ function calculateIntermediatePoints(distanceKm: number): number {
  * Uses actual GPS coordinates from the itinerary
  * Only includes start and end points as waypoints (not intermediate)
  */
-function generateWaypoints(waypoints: Array<{ name: string; description: string; lat: number; lon: number; index: number; type: string }>): string {
+function generateWaypoints(
+  waypoints: { name: string; description: string; lat: number; lon: number; index: number; type: string }[]
+): string {
   return waypoints
-    .filter(wp => wp.type === 'start' || wp.type === 'end')
+    .filter((wp) => wp.type === "start" || wp.type === "end")
     .map((wp) => {
       return `  <wpt lat="${wp.lat.toFixed(6)}" lon="${wp.lon.toFixed(6)}">
     <name>${escapeXml(wp.name)}</name>
@@ -190,7 +193,9 @@ function generateWaypoints(waypoints: Array<{ name: string; description: string;
  * Generates route point XML elements
  * Includes all points (start, intermediate, and end) for detailed routing
  */
-function generateRoutePoints(waypoints: Array<{ name: string; description: string; lat: number; lon: number; index: number; type: string }>): string {
+function generateRoutePoints(
+  waypoints: { name: string; description: string; lat: number; lon: number; index: number; type: string }[]
+): string {
   return waypoints
     .map((wp) => {
       return `    <rtept lat="${wp.lat.toFixed(6)}" lon="${wp.lon.toFixed(6)}">
@@ -216,7 +221,3 @@ function escapeXml(text: string | undefined | null): string {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 }
-
-
-
-

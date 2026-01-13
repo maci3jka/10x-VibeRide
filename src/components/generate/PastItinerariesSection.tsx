@@ -1,10 +1,25 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Download, Calendar, MapPin, Map as MapIcon, ExternalLink, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Download,
+  Calendar,
+  MapPin,
+  Map as MapIcon,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import type { ItineraryListItemResponse, RouteGeoJSON, GeoJSONFeature, ErrorResponse, MapyLinkResponse, GoogleMapsLinkResponse } from "@/types";
+import type {
+  ItineraryListItemResponse,
+  GeoJSONFeature,
+  ErrorResponse,
+  MapyLinkResponse,
+  GoogleMapsLinkResponse,
+} from "@/types";
 import { extractSummary, type ExtractedSummary } from "@/lib/services/geojsonService";
 
 interface PastItinerariesSectionProps {
@@ -17,11 +32,7 @@ interface PastItinerariesSectionProps {
  * PastItinerariesSection - displays previously generated itineraries
  * Shows a collapsible list of past versions with ability to view and download
  */
-export function PastItinerariesSection({
-  itineraries,
-  isLoading,
-  onDownload,
-}: PastItinerariesSectionProps) {
+export function PastItinerariesSection({ itineraries, isLoading, onDownload }: PastItinerariesSectionProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   if (isLoading) {
@@ -55,11 +66,7 @@ export function PastItinerariesSection({
         <CardContent>
           <div className="space-y-3">
             {itineraries.map((itinerary) => (
-              <ItineraryCard
-                key={itinerary.itinerary_id}
-                itinerary={itinerary}
-                onDownload={onDownload}
-              />
+              <ItineraryCard key={itinerary.itinerary_id} itinerary={itinerary} onDownload={onDownload} />
             ))}
           </div>
         </CardContent>
@@ -82,7 +89,7 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
   // Extract summary from GeoJSON
   let summary: ExtractedSummary | null = null;
   let dayCount = 0;
-  let featuresByDay: Map<number, GeoJSONFeature[]> = new Map();
+  const featuresByDay = new Map<number, GeoJSONFeature[]>();
 
   if (itinerary.route_geojson) {
     try {
@@ -95,7 +102,10 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
           if (!featuresByDay.has(day)) {
             featuresByDay.set(day, []);
           }
-          featuresByDay.get(day)!.push(feature);
+          const dayFeatures = featuresByDay.get(day);
+          if (dayFeatures) {
+            dayFeatures.push(feature);
+          }
         }
       }
       dayCount = featuresByDay.size;
@@ -149,7 +159,7 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
       }
 
       const result: MapyLinkResponse = await response.json();
-      
+
       // Open in new tab
       window.open(result.url, "_blank", "noopener,noreferrer");
     } catch {
@@ -193,7 +203,7 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
       }
 
       const result: GoogleMapsLinkResponse = await response.json();
-      
+
       // Open in new tab
       window.open(result.url, "_blank", "noopener,noreferrer");
     } catch {
@@ -300,12 +310,7 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
 
       {/* Expandable Details */}
       <div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-xs h-7 px-2"
-        >
+        <Button variant="ghost" size="sm" onClick={() => setIsExpanded(!isExpanded)} className="text-xs h-7 px-2">
           {isExpanded ? "Hide" : "View"} Details
           {isExpanded ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
         </Button>
@@ -352,5 +357,3 @@ function ItineraryCard({ itinerary, onDownload }: ItineraryCardProps) {
     </div>
   );
 }
-
-

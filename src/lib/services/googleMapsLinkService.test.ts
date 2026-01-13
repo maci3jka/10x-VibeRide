@@ -18,8 +18,8 @@ describe("googleMapsLinkService", () => {
             geometry: {
               type: "LineString",
               coordinates: [
-                [20.941900, 49.420800], // Szczawnica (lon, lat)
-                [20.414200, 49.395200], // Bialka (lon, lat)
+                [20.9419, 49.4208], // Szczawnica (lon, lat)
+                [20.4142, 49.3952], // Bialka (lon, lat)
               ],
             },
             properties: {
@@ -228,7 +228,7 @@ describe("googleMapsLinkService", () => {
       expect(url).toContain("origin=50.000000%2C20.000000"); // First point (lat,lon)
       expect(url).toContain("destination=52.900000%2C22.900000"); // Last point (lat,lon)
       expect(url).toContain("waypoints="); // Should have waypoints
-      
+
       // Count waypoints (should be 13 middle points)
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
@@ -344,11 +344,11 @@ describe("googleMapsLinkService", () => {
 
       // With proper sampling, this should not throw
       const url = buildLink(geojson, "driving", 25);
-      
+
       // Should sample down to 25 points (origin + 23 waypoints + destination)
       expect(url).toContain("origin=50.000000%2C20.000000");
       expect(url).toContain("destination=50.990000%2C20.990000");
-      
+
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split("|");
@@ -385,7 +385,7 @@ describe("googleMapsLinkService", () => {
       // Should keep all 25 points (origin + 23 waypoints + destination)
       expect(url).toContain("origin=50.000000%2C20.000000");
       expect(url).toContain("destination=52.400000%2C22.400000");
-      
+
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split("|");
@@ -423,7 +423,7 @@ describe("googleMapsLinkService", () => {
       expect(url).toContain("origin=");
       expect(url).toContain("destination=");
       expect(url).toContain("travelmode=");
-      
+
       // Verify it's a valid URL
       expect(() => new URL(url)).not.toThrow();
     });
@@ -483,13 +483,13 @@ describe("googleMapsLinkService", () => {
       // Total: 3 + 2 + 2 = 7 unique points (duplicates at segment boundaries removed)
       expect(url).toContain("origin=50.000000%2C20.000000"); // First point of Day 1 (lat,lon)
       expect(url).toContain("destination=53.000000%2C23.000000"); // Last point of Day 3 (lat,lon)
-      
+
       // Should have waypoints from all segments
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split("|");
       expect(waypoints.length).toBe(5); // 7 total - 2 (origin/destination)
-      
+
       // Verify some middle waypoints are included (lat,lon format)
       const waypointsStr = decodeURIComponent(waypointsMatch![1]);
       expect(waypointsStr).toContain("50.500000,20.500000"); // Day 1 middle
@@ -556,7 +556,7 @@ describe("googleMapsLinkService", () => {
 
       // Should use default maxPoints of 25
       const url = buildLink(geojson);
-      
+
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split("|");
@@ -564,4 +564,3 @@ describe("googleMapsLinkService", () => {
     });
   });
 });
-

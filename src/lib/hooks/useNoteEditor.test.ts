@@ -224,7 +224,7 @@ describe("useNoteEditor", () => {
         result.current.updateNoteText("This is a test note with enough characters.");
       });
 
-      let saveResult: boolean = false;
+      let saveResult = false;
       await act(async () => {
         saveResult = await result.current.save();
       });
@@ -350,7 +350,7 @@ describe("useNoteEditor", () => {
         result.current.updateNoteText("This is a test note with enough characters.");
       });
 
-      let saveResult: boolean = false;
+      let saveResult = false;
       await act(async () => {
         saveResult = await result.current.save();
       });
@@ -379,7 +379,7 @@ describe("useNoteEditor", () => {
         result.current.updateNoteText("This is a test note with enough characters.");
       });
 
-      let saveResult: boolean = false;
+      let saveResult = false;
       await act(async () => {
         saveResult = await result.current.save();
       });
@@ -398,7 +398,7 @@ describe("useNoteEditor", () => {
         result.current.updateNoteText("This is a test note with enough characters.");
       });
 
-      let saveResult: boolean = false;
+      let saveResult = false;
       await act(async () => {
         saveResult = await result.current.save();
       });
@@ -514,4 +514,3 @@ describe("useNoteEditor", () => {
     });
   });
 });
-

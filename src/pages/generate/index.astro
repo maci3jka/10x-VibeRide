@@ -4,7 +4,7 @@ import { GeneratePage } from "@/components/generate";
 
 /**
  * Generate page - AI itinerary generation
- * 
+ *
  * Protected route: requires authentication
  * Requires at least one note to exist
  */
@@ -19,7 +19,7 @@ if (!Astro.locals.user) {
 const buildInternalUrl = (path: string) => {
   // Always use HTTP for internal fetches (server only listens on HTTP)
   // Extract port from the request URL, defaulting to 4321 for development
-  const port = Astro.url.port || '4321';
+  const port = Astro.url.port || "4321";
   return `http://localhost:${port}${path}`;
 };
 
@@ -31,7 +31,7 @@ try {
       Cookie: Astro.request.headers.get("Cookie") || "",
     },
   });
-  
+
   if (prefsResponse.ok) {
     userPreferences = await prefsResponse.json();
   }
@@ -49,7 +49,7 @@ try {
       Cookie: Astro.request.headers.get("Cookie") || "",
     },
   });
-  
+
   if (notesResponse.ok) {
     const notesData = await notesResponse.json();
     hasNotes = notesData.data.length > 0;
@@ -68,9 +68,5 @@ export const prerender = false;
 ---
 
 <Layout title="Generate - VibeRide">
-  <GeneratePage 
-    client:load 
-    initialNote={initialNote}
-    userPreferences={userPreferences}
-  />
+  <GeneratePage client:load initialNote={initialNote} userPreferences={userPreferences} />
 </Layout>

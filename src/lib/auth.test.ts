@@ -403,9 +403,7 @@ describe("auth", () => {
     });
 
     it("should handle network errors gracefully", async () => {
-      vi.mocked(supabaseClient.auth.refreshSession).mockRejectedValueOnce(
-        new Error("Network error")
-      );
+      vi.mocked(supabaseClient.auth.refreshSession).mockRejectedValueOnce(new Error("Network error"));
 
       await expect(refreshSession()).rejects.toThrow("Network error");
     });
@@ -529,11 +527,7 @@ describe("auth", () => {
         error: null,
       });
 
-      const results = await Promise.all([
-        refreshSession(),
-        refreshSession(),
-        refreshSession(),
-      ]);
+      const results = await Promise.all([refreshSession(), refreshSession(), refreshSession()]);
 
       expect(results).toHaveLength(3);
       results.forEach((result) => {

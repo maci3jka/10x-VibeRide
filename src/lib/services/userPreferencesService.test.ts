@@ -119,12 +119,9 @@ describe("userPreferencesService", () => {
 
       await upsertUserPreferences(mockSupabase, userId, prefsInput);
 
-      expect(mockUpsert).toHaveBeenCalledWith(
-        expect.any(Object),
-        {
-          onConflict: "user_id",
-        }
-      );
+      expect(mockUpsert).toHaveBeenCalledWith(expect.any(Object), {
+        onConflict: "user_id",
+      });
     });
 
     it("should throw error when upsert fails", async () => {
@@ -146,9 +143,9 @@ describe("userPreferencesService", () => {
         upsert: mockUpsert,
       } as any);
 
-      await expect(
-        upsertUserPreferences(mockSupabase, userId, prefsInput)
-      ).rejects.toThrow("Failed to upsert user preferences");
+      await expect(upsertUserPreferences(mockSupabase, userId, prefsInput)).rejects.toThrow(
+        "Failed to upsert user preferences"
+      );
     });
 
     it("should include error code in error message", async () => {
@@ -170,9 +167,7 @@ describe("userPreferencesService", () => {
         upsert: mockUpsert,
       } as any);
 
-      await expect(
-        upsertUserPreferences(mockSupabase, userId, prefsInput)
-      ).rejects.toThrow("(code: PGRST301)");
+      await expect(upsertUserPreferences(mockSupabase, userId, prefsInput)).rejects.toThrow("(code: PGRST301)");
     });
 
     it("should throw error when no data returned", async () => {
@@ -191,9 +186,9 @@ describe("userPreferencesService", () => {
         upsert: mockUpsert,
       } as any);
 
-      await expect(
-        upsertUserPreferences(mockSupabase, userId, prefsInput)
-      ).rejects.toThrow("No data returned from upsert operation");
+      await expect(upsertUserPreferences(mockSupabase, userId, prefsInput)).rejects.toThrow(
+        "No data returned from upsert operation"
+      );
     });
 
     it("should handle all terrain types", async () => {
@@ -368,9 +363,7 @@ describe("userPreferencesService", () => {
         select: mockSelect,
       } as any);
 
-      await expect(
-        getUserPreferences(mockSupabase, userId)
-      ).rejects.toThrow("Failed to fetch user preferences");
+      await expect(getUserPreferences(mockSupabase, userId)).rejects.toThrow("Failed to fetch user preferences");
     });
 
     it("should throw error with original error message", async () => {
@@ -394,9 +387,7 @@ describe("userPreferencesService", () => {
         select: mockSelect,
       } as any);
 
-      await expect(
-        getUserPreferences(mockSupabase, userId)
-      ).rejects.toThrow("Database constraint violation");
+      await expect(getUserPreferences(mockSupabase, userId)).rejects.toThrow("Database constraint violation");
     });
 
     it("should handle successful response with all fields", async () => {

@@ -23,10 +23,7 @@ export function TitleInput({ value, onChange, error, disabled = false }: TitleIn
         <Label htmlFor="note-title">
           Title <span className="text-destructive">*</span>
         </Label>
-        <span
-          className={`text-sm ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}
-          aria-live="polite"
-        >
+        <span className={`text-sm ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`} aria-live="polite">
           {charCount}/{maxChars}
         </span>
       </div>
@@ -49,6 +46,3 @@ export function TitleInput({ value, onChange, error, disabled = false }: TitleIn
     </div>
   );
 }
-
-
-

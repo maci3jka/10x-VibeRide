@@ -22,9 +22,7 @@ export function ItinerarySummary({ routeGeoJSON }: ItinerarySummaryProps) {
     return (
       <Card>
         <CardContent className="py-6">
-          <p className="text-sm text-muted-foreground text-center">
-            Unable to display itinerary summary
-          </p>
+          <p className="text-sm text-muted-foreground text-center">Unable to display itinerary summary</p>
         </CardContent>
       </Card>
     );
@@ -38,9 +36,7 @@ export function ItinerarySummary({ routeGeoJSON }: ItinerarySummaryProps) {
     return (
       <Card>
         <CardContent className="py-6">
-          <p className="text-sm text-muted-foreground text-center">
-            Unable to parse itinerary data
-          </p>
+          <p className="text-sm text-muted-foreground text-center">Unable to parse itinerary data</p>
         </CardContent>
       </Card>
     );
@@ -104,7 +100,10 @@ function groupFeaturesByDay(features: GeoJSONFeature[]): DaySegments[] {
     if (!dayMap.has(day)) {
       dayMap.set(day, []);
     }
-    dayMap.get(day)!.push(feature);
+    const dayFeatures = dayMap.get(day);
+    if (dayFeatures) {
+      dayFeatures.push(feature);
+    }
   }
 
   // Convert to array and sort by day
@@ -125,7 +124,7 @@ interface DayAccordionProps {
  */
 function DayAccordion({ dayData }: DayAccordionProps) {
   const { day, features } = dayData;
-  
+
   // Calculate day totals from feature properties
   const dayDistance = features.reduce((sum, feature) => sum + (feature.properties.distance_km || 0), 0);
   const dayDuration = features.reduce((sum, feature) => sum + (feature.properties.duration_h || 0), 0);
@@ -170,4 +169,3 @@ function DayAccordion({ dayData }: DayAccordionProps) {
     </AccordionItem>
   );
 }
-

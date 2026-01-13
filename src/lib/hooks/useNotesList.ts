@@ -22,15 +22,12 @@ export function useNotesList(): UseNotesListReturn {
     setError(null);
 
     try {
-      const response = await window.fetch(
-        "/api/notes?limit=100&sort=updated_at&order=desc",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await window.fetch("/api/notes?limit=100&sort=updated_at&order=desc", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         // Handle 401 - session expired
@@ -69,6 +66,3 @@ export function useNotesList(): UseNotesListReturn {
     refetch: fetchNotes,
   };
 }
-
-
-

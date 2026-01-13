@@ -2,11 +2,7 @@ import type { APIRoute } from "astro";
 import { z } from "zod";
 import { logger } from "../../../../lib/logger";
 import { getById, ItineraryNotFoundError } from "../../../../lib/services/itineraryService";
-import {
-  buildLink,
-  TooManyPointsError,
-  LinkGenerationError,
-} from "../../../../lib/services/googleMapsLinkService";
+import { buildLink, TooManyPointsError, LinkGenerationError } from "../../../../lib/services/googleMapsLinkService";
 import type { RouteGeoJSON, GoogleMapsLinkResponse } from "../../../../types";
 
 export const prerender = false;
@@ -106,7 +102,10 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
 
     // Step 5: Verify itinerary is completed
     if (itinerary.status !== "completed") {
-      logger.warn({ itineraryId, userId, status: itinerary.status }, "Attempted to generate Google Maps link for non-completed itinerary");
+      logger.warn(
+        { itineraryId, userId, status: itinerary.status },
+        "Attempted to generate Google Maps link for non-completed itinerary"
+      );
       return new Response(
         JSON.stringify({
           error: "itinerary_not_completed",
@@ -219,4 +218,3 @@ export const GET: APIRoute = async ({ params, url, locals }) => {
     );
   }
 };
-

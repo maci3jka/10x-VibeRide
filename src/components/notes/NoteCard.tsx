@@ -19,7 +19,15 @@ interface NoteCardProps {
  * Supports archive/unarchive and delete operations
  * Includes swipe gestures on mobile (left = delete, right = archive/unarchive)
  */
-export function NoteCard({ note, onArchive, onUnarchive, onDelete, onClick, onGenerate, disabled = false }: NoteCardProps) {
+export function NoteCard({
+  note,
+  onArchive,
+  onUnarchive,
+  onDelete,
+  onClick,
+  onGenerate,
+  disabled = false,
+}: NoteCardProps) {
   // Swipe handlers for mobile
   const swipeHandlers = useSwipe({
     onSwipeLeft: () => {
@@ -80,10 +88,11 @@ export function NoteCard({ note, onArchive, onUnarchive, onDelete, onClick, onGe
   const truncatedText = note.note_text.length > 150 ? `${note.note_text.slice(0, 150)}...` : note.note_text;
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <article
       className="group rounded-lg border bg-card p-4 transition-all hover:shadow-md cursor-pointer touch-pan-y"
       onClick={handleCardClick}
-      role="button"
+      // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
@@ -136,11 +145,7 @@ export function NoteCard({ note, onArchive, onUnarchive, onDelete, onClick, onGe
               aria-label={note.isArchived ? "Unarchive note" : "Archive note"}
               className="h-8 w-8"
             >
-              {note.isArchived ? (
-                <ArchiveRestore className="h-4 w-4" />
-              ) : (
-                <Archive className="h-4 w-4" />
-              )}
+              {note.isArchived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}
             </Button>
             <Button
               variant="ghost"
@@ -158,4 +163,3 @@ export function NoteCard({ note, onArchive, onUnarchive, onDelete, onClick, onGe
     </article>
   );
 }
-

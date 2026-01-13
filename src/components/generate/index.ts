@@ -10,4 +10,3 @@ export { ItinerarySummary } from "./ItinerarySummary";
 export { DownloadSection } from "./DownloadSection";
 export { ErrorRetryCard } from "./ErrorRetryCard";
 export { PastItinerariesSection } from "./PastItinerariesSection";
-

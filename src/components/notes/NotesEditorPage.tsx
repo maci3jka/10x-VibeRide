@@ -12,7 +12,7 @@ import { toast } from "sonner";
 
 interface NotesEditorPageProps {
   noteId?: string;
-  userPreferences?: any; // UserPreferences from types.ts
+  userPreferences?: unknown; // UserPreferences from types.ts
 }
 
 /**
@@ -20,16 +20,8 @@ interface NotesEditorPageProps {
  * Handles autosave, validation, and unsaved changes warnings
  */
 export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProps) {
-  const {
-    viewModel,
-    error,
-    isLoading,
-    lastSavedAt,
-    updateTitle,
-    updateNoteText,
-    updateTripPrefs,
-    save,
-  } = useNoteEditor(noteId);
+  const { viewModel, error, isLoading, lastSavedAt, updateTitle, updateNoteText, updateTripPrefs, save } =
+    useNoteEditor(noteId);
 
   // Show error toasts
   useEffect(() => {
@@ -131,7 +123,9 @@ export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProp
         <EditorHeader
           title="Loading..."
           saveState="idle"
-          onSave={() => {}}
+          onSave={() => {
+            /* noop */
+          }}
           onBack={handleBack}
           disabled={true}
         />
@@ -152,7 +146,9 @@ export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProp
         <EditorHeader
           title="Note Not Found"
           saveState="idle"
-          onSave={() => {}}
+          onSave={() => {
+            /* noop */
+          }}
           onBack={handleBack}
           disabled={true}
         />
@@ -161,7 +157,7 @@ export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProp
             <div className="rounded-lg border border-destructive bg-destructive/10 p-6 text-center">
               <p className="text-lg font-medium text-destructive">Note not found</p>
               <p className="mt-2 text-sm text-muted-foreground">
-                The note you're looking for doesn't exist or has been deleted.
+                The note you&apos;re looking for doesn&apos;t exist or has been deleted.
               </p>
             </div>
           </div>
@@ -196,11 +192,7 @@ export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProp
           }}
         >
           {/* Title Input */}
-          <TitleInput
-            value={viewModel.title}
-            onChange={updateTitle}
-            disabled={viewModel.saveState === "saving"}
-          />
+          <TitleInput value={viewModel.title} onChange={updateTitle} disabled={viewModel.saveState === "saving"} />
 
           {/* Note Text Area */}
           <NoteTextArea
@@ -246,9 +238,7 @@ export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProp
                   Generate Itinerary
                 </Button>
                 {viewModel.dirty && (
-                  <p className="text-xs text-muted-foreground text-center">
-                    Save your changes first
-                  </p>
+                  <p className="text-xs text-muted-foreground text-center">Save your changes first</p>
                 )}
               </div>
             </div>
@@ -263,4 +253,3 @@ export function NotesEditorPage({ noteId, userPreferences }: NotesEditorPageProp
     </div>
   );
 }
-

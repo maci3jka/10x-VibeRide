@@ -27,6 +27,3 @@ export function StatusBadges({ isArchived, itineraryCount }: StatusBadgesProps) 
     </div>
   );
 }
-
-
-

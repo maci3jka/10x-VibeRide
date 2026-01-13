@@ -1,11 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import type {
-  NoteResponse,
-  CreateNoteRequest,
-  UpdateNoteRequest,
-  ErrorResponse,
-  TripPreferences,
-} from "@/types";
+import type { NoteResponse, CreateNoteRequest, UpdateNoteRequest, ErrorResponse, TripPreferences } from "@/types";
 
 export type SaveState = "idle" | "saving" | "saved" | "error";
 
@@ -277,6 +271,3 @@ export function useNoteEditor(noteId?: string): UseNoteEditorReturn {
     resetDirty,
   };
 }
-
-
-

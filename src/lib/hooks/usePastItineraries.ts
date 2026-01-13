@@ -27,15 +27,12 @@ export function usePastItineraries(noteId: string | undefined): UsePastItinerari
     setError(null);
 
     try {
-      const response = await window.fetch(
-        `/api/notes/${noteId}/itineraries?status=completed&limit=10`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await window.fetch(`/api/notes/${noteId}/itineraries?status=completed&limit=10`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         // Handle 401 - session expired
@@ -74,6 +71,3 @@ export function usePastItineraries(noteId: string | undefined): UsePastItinerari
     refetch: fetchItineraries,
   };
 }
-
-
-

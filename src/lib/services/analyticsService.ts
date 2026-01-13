@@ -1,6 +1,5 @@
 import type { SupabaseClient } from "../../db/supabase.client";
 import type { UserStatsResponse, GenerationStatsResponse } from "../../types";
-import type { StatsQueryInput } from "../validators/analytics";
 
 /**
  * Service for analytics and statistics operations
@@ -22,10 +21,7 @@ interface DateRange {
  * @returns User statistics
  * @throws Error if database operation fails
  */
-export async function getUserStats(
-  supabase: SupabaseClient,
-  range: DateRange = {}
-): Promise<UserStatsResponse> {
+export async function getUserStats(supabase: SupabaseClient, range: DateRange = {}): Promise<UserStatsResponse> {
   // Build date filter for new users
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -141,10 +137,7 @@ export async function getGenerationStats(
   }
 
   // Query 3: Failed generations
-  let failedQuery = supabase
-    .from("itineraries")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "failed");
+  let failedQuery = supabase.from("itineraries").select("*", { count: "exact", head: true }).eq("status", "failed");
 
   if (range.from) {
     failedQuery = failedQuery.gte("created_at", range.from);
@@ -182,10 +175,7 @@ export async function getGenerationStats(
   const failureRate = totalGenerations && totalGenerations > 0 ? (failedGenerations ?? 0) / totalGenerations : 0;
 
   // Query 5: Get generation times for completed itineraries
-  let timingQuery = supabase
-    .from("itineraries")
-    .select("created_at, updated_at")
-    .eq("status", "completed");
+  let timingQuery = supabase.from("itineraries").select("created_at, updated_at").eq("status", "completed");
 
   if (range.from) {
     timingQuery = timingQuery.gte("created_at", range.from);
@@ -214,7 +204,7 @@ export async function getGenerationStats(
   // Calculate p95 (95th percentile)
   const sortedDurations = [...durations].sort((a, b) => a - b);
   const p95Index = Math.floor(sortedDurations.length * 0.95);
-  const p95GenerationTime = sortedDurations.length > 0 ? sortedDurations[p95Index] ?? 0 : 0;
+  const p95GenerationTime = sortedDurations.length > 0 ? (sortedDurations[p95Index] ?? 0) : 0;
 
   // Query 6: Generations per user statistics
   let perUserQuery = supabase.from("itineraries").select("user_id");
@@ -247,8 +237,8 @@ export async function getGenerationStats(
   const medianPerUser =
     sortedCounts.length > 0
       ? sortedCounts.length % 2 === 0
-        ? (sortedCounts[sortedCounts.length / 2 - 1]! + sortedCounts[sortedCounts.length / 2]!) / 2
-        : sortedCounts[Math.floor(sortedCounts.length / 2)]!
+        ? ((sortedCounts[sortedCounts.length / 2 - 1] ?? 0) + (sortedCounts[sortedCounts.length / 2] ?? 0)) / 2
+        : (sortedCounts[Math.floor(sortedCounts.length / 2)] ?? 0)
       : 0;
 
   const usersWith3Plus = counts.filter((c) => c >= 3).length;
@@ -272,4 +262,3 @@ export async function getGenerationStats(
     estimated_cost_usd: estimatedCostUsd,
   };
 }
-

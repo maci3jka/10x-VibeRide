@@ -69,4 +69,3 @@ export const POST: APIRoute = async ({ locals, params }) => {
 };
 
 export const prerender = false;
-

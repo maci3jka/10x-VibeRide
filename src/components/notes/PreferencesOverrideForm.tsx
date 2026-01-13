@@ -7,14 +7,19 @@ interface PreferencesOverrideFormProps {
   value: TripPreferences;
   onChange: (prefs: TripPreferences) => void;
   disabled?: boolean;
-  userDefaults?: any; // UserPreferences from types.ts
+  userDefaults?: unknown; // UserPreferences from types.ts
 }
 
 /**
  * Form for optional trip preference overrides
  * All fields are optional - empty values inherit from user defaults
  */
-export function PreferencesOverrideForm({ value, onChange, disabled = false, userDefaults }: PreferencesOverrideFormProps) {
+export function PreferencesOverrideForm({
+  value,
+  onChange,
+  disabled = false,
+  userDefaults,
+}: PreferencesOverrideFormProps) {
   // Ensure value is always an object, even if undefined is passed
   const prefs = value ?? {};
 
@@ -24,6 +29,7 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
 
   const clearField = (field: keyof TripPreferences) => {
     const newPrefs = { ...prefs };
+    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete newPrefs[field];
     onChange(newPrefs);
   };
@@ -42,7 +48,9 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
         <Label htmlFor="trip-terrain">Terrain</Label>
         <Select
           value={prefs.terrain ?? "__default__"}
-          onValueChange={(val) => (val === "__default__" ? clearField("terrain") : updateField("terrain", val as TripPreferences["terrain"]))}
+          onValueChange={(val) =>
+            val === "__default__" ? clearField("terrain") : updateField("terrain", val as TripPreferences["terrain"])
+          }
           disabled={disabled}
         >
           <SelectTrigger id="trip-terrain">
@@ -58,9 +66,7 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
           </SelectContent>
         </Select>
         {!prefs.terrain && userDefaults?.terrain && (
-          <p className="text-xs text-muted-foreground">
-            Default: {userDefaults.terrain}
-          </p>
+          <p className="text-xs text-muted-foreground">Default: {userDefaults.terrain}</p>
         )}
       </div>
 
@@ -69,7 +75,11 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
         <Label htmlFor="trip-road-type">Road Type</Label>
         <Select
           value={prefs.road_type ?? "__default__"}
-          onValueChange={(val) => (val === "__default__" ? clearField("road_type") : updateField("road_type", val as TripPreferences["road_type"]))}
+          onValueChange={(val) =>
+            val === "__default__"
+              ? clearField("road_type")
+              : updateField("road_type", val as TripPreferences["road_type"])
+          }
           disabled={disabled}
         >
           <SelectTrigger id="trip-road-type">
@@ -85,9 +95,7 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
           </SelectContent>
         </Select>
         {!prefs.road_type && userDefaults?.road_type && (
-          <p className="text-xs text-muted-foreground">
-            Default: {userDefaults.road_type}
-          </p>
+          <p className="text-xs text-muted-foreground">Default: {userDefaults.road_type}</p>
         )}
       </div>
 
@@ -116,9 +124,7 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
           disabled={disabled}
         />
         {!prefs.duration_h && userDefaults?.typical_duration_h ? (
-          <p className="text-xs text-muted-foreground">
-            Default: {userDefaults.typical_duration_h} hours
-          </p>
+          <p className="text-xs text-muted-foreground">Default: {userDefaults.typical_duration_h} hours</p>
         ) : (
           <p className="text-xs text-muted-foreground">Maximum 999.9 hours</p>
         )}
@@ -133,7 +139,9 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
           step="0.1"
           min="0.1"
           max="999999.9"
-          placeholder={userDefaults?.typical_distance_km ? `Default: ${userDefaults.typical_distance_km}` : "Use default"}
+          placeholder={
+            userDefaults?.typical_distance_km ? `Default: ${userDefaults.typical_distance_km}` : "Use default"
+          }
           value={prefs.distance_km ?? ""}
           onChange={(e) => {
             const val = e.target.value;
@@ -149,9 +157,7 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
           disabled={disabled}
         />
         {!prefs.distance_km && userDefaults?.typical_distance_km ? (
-          <p className="text-xs text-muted-foreground">
-            Default: {userDefaults.typical_distance_km} km
-          </p>
+          <p className="text-xs text-muted-foreground">Default: {userDefaults.typical_distance_km} km</p>
         ) : (
           <p className="text-xs text-muted-foreground">Maximum 999,999.9 km</p>
         )}
@@ -159,4 +165,3 @@ export function PreferencesOverrideForm({ value, onChange, disabled = false, use
     </div>
   );
 }
-

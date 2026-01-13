@@ -89,6 +89,7 @@ export function useGenerate(): UseGenerateReturn {
           // Handle 401 - session expired
           if (response.status === 401) {
             stopPolling();
+            // eslint-disable-next-line react-compiler/react-compiler
             window.location.href = "/";
             return;
           }
@@ -367,7 +368,7 @@ export function useGenerate(): UseGenerateReturn {
         const downloadUrl = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = downloadUrl;
-        
+
         // Create filename from title if available, otherwise use itinerary ID
         const extension = format === "gpx" ? "gpx" : "geojson";
         let filename = `itinerary-${itineraryId}.${extension}`;
@@ -380,7 +381,7 @@ export function useGenerate(): UseGenerateReturn {
             .slice(0, 50);
           filename = `${sanitizedTitle}.${extension}`;
         }
-        
+
         link.download = filename;
         document.body.appendChild(link);
         link.click();
@@ -422,4 +423,3 @@ export function useGenerate(): UseGenerateReturn {
     reset,
   };
 }
-

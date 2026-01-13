@@ -45,6 +45,3 @@ export function ProgressSection({ progress, onCancel, showCancelButton }: Progre
     </Card>
   );
 }
-
-
-

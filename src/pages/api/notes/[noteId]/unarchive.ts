@@ -43,4 +43,3 @@ export const POST: APIRoute = async ({ locals, params }) => {
     return errorResponse(500, "server_error", "Failed to unarchive note");
   }
 };
-

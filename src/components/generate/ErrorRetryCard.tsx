@@ -20,15 +20,11 @@ export function ErrorRetryCard({ error, onRetry }: ErrorRetryCardProps) {
           <AlertCircle className="h-5 w-5" />
           Generation Failed
         </CardTitle>
-        <CardDescription>
-          We encountered an error while generating your itinerary
-        </CardDescription>
+        <CardDescription>We encountered an error while generating your itinerary</CardDescription>
       </CardHeader>
       <CardContent>
         <Alert variant="destructive">
-          <AlertDescription>
-            {error || "An unexpected error occurred. Please try again."}
-          </AlertDescription>
+          <AlertDescription>{error || "An unexpected error occurred. Please try again."}</AlertDescription>
         </Alert>
       </CardContent>
       <CardFooter>

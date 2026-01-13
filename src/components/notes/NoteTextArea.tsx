@@ -25,10 +25,7 @@ export function NoteTextArea({ value, onChange, error, disabled = false }: NoteT
         <Label htmlFor="note-text">
           Note <span className="text-destructive">*</span>
         </Label>
-        <span
-          className={`text-sm ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}
-          aria-live="polite"
-        >
+        <span className={`text-sm ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`} aria-live="polite">
           {charCount}/{maxChars}
         </span>
       </div>
@@ -56,6 +53,3 @@ export function NoteTextArea({ value, onChange, error, disabled = false }: NoteT
     </div>
   );
 }
-
-
-

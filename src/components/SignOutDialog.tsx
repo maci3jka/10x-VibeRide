@@ -32,7 +32,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       console.log("Sign out initiated");
 
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // In production, this will call the sign-out endpoint
       // const response = await fetch('/api/auth/signout', {
@@ -46,7 +46,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
       //
       // toast.success('You have been signed out.');
       // window.location.href = '/';
-    } catch (err) {
+    } catch {
       setError("Sign out failed. Please try again.");
       setLoading(false);
     }
@@ -59,14 +59,11 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        role="alertdialog"
-        aria-describedby="signout-description"
-      >
+      <DialogContent role="alertdialog" aria-describedby="signout-description">
         <DialogHeader>
           <DialogTitle>Sign Out</DialogTitle>
           <DialogDescription id="signout-description">
-            Are you sure you want to sign out? You'll need to sign in again to access your notes and itineraries.
+            Are you sure you want to sign out? You&apos;ll need to sign in again to access your notes and itineraries.
           </DialogDescription>
         </DialogHeader>
 
@@ -77,18 +74,10 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
         )}
 
         <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            variant="outline"
-            onClick={handleCancel}
-            disabled={loading}
-          >
+          <Button variant="outline" onClick={handleCancel} disabled={loading}>
             Cancel
           </Button>
-          <Button
-            variant="destructive"
-            onClick={handleSignOut}
-            disabled={loading}
-          >
+          <Button variant="destructive" onClick={handleSignOut} disabled={loading}>
             {loading ? (
               <>
                 <svg
@@ -98,14 +87,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
                   viewBox="0 0 24 24"
                   aria-hidden="true"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path
                     className="opacity-75"
                     fill="currentColor"
@@ -123,4 +105,3 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
     </Dialog>
   );
 }
-

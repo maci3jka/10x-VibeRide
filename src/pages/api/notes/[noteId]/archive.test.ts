@@ -159,4 +159,3 @@ describe("POST /api/notes/:noteId/archive", () => {
     expect(body.error).toBe("server_error");
   });
 });
-

@@ -529,10 +529,9 @@ describe("useSwipe", () => {
       const firstHandler = vi.fn();
       const secondHandler = vi.fn();
 
-      const { result, rerender } = renderHook(
-        ({ handler }) => useSwipe({ onSwipeRight: handler }),
-        { initialProps: { handler: firstHandler } }
-      );
+      const { result, rerender } = renderHook(({ handler }) => useSwipe({ onSwipeRight: handler }), {
+        initialProps: { handler: firstHandler },
+      });
 
       // First swipe with first handler
       result.current.onTouchStart(createTouchEvent("touchstart", 100, 100));

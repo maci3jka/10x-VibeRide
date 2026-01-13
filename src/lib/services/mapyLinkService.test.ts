@@ -18,8 +18,8 @@ describe("mapyLinkService", () => {
             geometry: {
               type: "LineString",
               coordinates: [
-                [20.941900, 49.420800], // Szczawnica
-                [20.414200, 49.395200], // Bialka
+                [20.9419, 49.4208], // Szczawnica
+                [20.4142, 49.3952], // Bialka
               ],
             },
             properties: {
@@ -164,7 +164,7 @@ describe("mapyLinkService", () => {
       expect(url).toContain("start=20.000000%2C50.000000"); // First point
       expect(url).toContain("end=21.900000%2C51.900000"); // Last point
       expect(url).toContain("waypoints="); // Should have waypoints
-      
+
       // Count waypoints (should be 8 middle points)
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
@@ -280,11 +280,11 @@ describe("mapyLinkService", () => {
 
       // With proper sampling, this should not throw
       const url = buildLink(geojson, "bike", 15);
-      
+
       // Should sample down to 15 points (start + 13 waypoints + end)
       expect(url).toContain("start=20.000000%2C50.000000");
       expect(url).toContain("end=20.990000%2C50.990000");
-      
+
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split(";");
@@ -321,7 +321,7 @@ describe("mapyLinkService", () => {
       // Should keep all 15 points (start + 13 waypoints + end)
       expect(url).toContain("start=20.000000%2C50.000000");
       expect(url).toContain("end=21.400000%2C51.400000");
-      
+
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split(";");
@@ -358,7 +358,7 @@ describe("mapyLinkService", () => {
       expect(url).toContain("start=");
       expect(url).toContain("end=");
       expect(url).toContain("routeType=");
-      
+
       // Verify it's a valid URL
       expect(() => new URL(url)).not.toThrow();
     });
@@ -418,13 +418,13 @@ describe("mapyLinkService", () => {
       // Total: 3 + 2 + 2 = 7 unique points (duplicates at segment boundaries removed)
       expect(url).toContain("start=20.000000%2C50.000000"); // First point of Day 1
       expect(url).toContain("end=23.000000%2C53.000000"); // Last point of Day 3
-      
+
       // Should have waypoints from all segments
       const waypointsMatch = url.match(/waypoints=([^&]+)/);
       expect(waypointsMatch).toBeTruthy();
       const waypoints = decodeURIComponent(waypointsMatch![1]).split(";");
       expect(waypoints.length).toBe(5); // 7 total - 2 (start/end)
-      
+
       // Verify some middle waypoints are included
       const waypointsStr = decodeURIComponent(waypointsMatch![1]);
       expect(waypointsStr).toContain("20.500000,50.500000"); // Day 1 middle
@@ -433,4 +433,3 @@ describe("mapyLinkService", () => {
     });
   });
 });
-

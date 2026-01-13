@@ -62,4 +62,3 @@ export function useSwipe(handlers: SwipeHandlers): SwipeEventHandlers {
     onTouchEnd,
   };
 }
-

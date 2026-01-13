@@ -61,9 +61,7 @@ export function NotesHeader({ query, includeArchived, onSearch, onToggleArchived
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">Trip Notes</h1>
-          <p className="text-sm text-muted-foreground">
-            Create and manage your motorcycle trip notes
-          </p>
+          <p className="text-sm text-muted-foreground">Create and manage your motorcycle trip notes</p>
         </div>
         <Button onClick={onNewNote} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" />
@@ -108,6 +106,3 @@ export function NotesHeader({ query, includeArchived, onSearch, onToggleArchived
     </header>
   );
 }
-
-
-

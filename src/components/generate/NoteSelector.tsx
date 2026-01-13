@@ -44,4 +44,3 @@ export function NoteSelector({ notes, selectedNoteId, onSelectNote, disabled = f
     </div>
   );
 }
-

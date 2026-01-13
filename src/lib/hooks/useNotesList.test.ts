@@ -84,15 +84,12 @@ describe("useNotesList", () => {
       renderHook(() => useNotesList());
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          "/api/notes?limit=100&sort=updated_at&order=desc",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+        expect(mockFetch).toHaveBeenCalledWith("/api/notes?limit=100&sort=updated_at&order=desc", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
       });
     });
   });
@@ -146,10 +143,7 @@ describe("useNotesList", () => {
       renderHook(() => useNotesList());
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith(
-          "/api/notes?limit=100&sort=updated_at&order=desc",
-          expect.any(Object)
-        );
+        expect(mockFetch).toHaveBeenCalledWith("/api/notes?limit=100&sort=updated_at&order=desc", expect.any(Object));
       });
     });
 

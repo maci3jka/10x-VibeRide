@@ -5,11 +5,7 @@ import { z } from "zod";
 import { statsQuerySchema } from "./analytics";
 
 // Itinerary validators
-import {
-  generateItinerarySchema,
-  listItinerariesQuerySchema,
-  downloadGpxQuerySchema,
-} from "./itinerary";
+import { generateItinerarySchema, listItinerariesQuerySchema, downloadGpxQuerySchema } from "./itinerary";
 
 // Notes validators
 import {

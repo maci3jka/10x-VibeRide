@@ -35,11 +35,11 @@ describe("gpxService", () => {
 
       // Check XML declaration
       expect(gpx).toContain('<?xml version="1.0" encoding="UTF-8"?>');
-      
+
       // Check GPX version and namespace
       expect(gpx).toContain('version="1.1"');
       expect(gpx).toContain('xmlns="http://www.topografix.com/GPX/1/1"');
-      
+
       // Check creator
       expect(gpx).toContain('creator="VibeRide - https://viberide.com"');
     });
@@ -143,14 +143,14 @@ describe("gpxService", () => {
 
     it("should escape XML special characters in names and descriptions", () => {
       const itinerary: ItinerarySummaryJSON = {
-        title: "Route with <special> & \"characters\"",
+        title: 'Route with <special> & "characters"',
         days: [
           {
             day: 1,
             segments: [
               {
                 name: "Point <A>",
-                description: "Description with & and \"quotes\"",
+                description: 'Description with & and "quotes"',
                 distance_km: 50,
                 duration_h: 1,
               },
@@ -221,12 +221,12 @@ describe("gpxService", () => {
       const waypointMatches = gpx.match(/<wpt lat=/g);
       expect(waypointMatches).not.toBeNull();
       expect(waypointMatches!.length).toBeGreaterThan(3); // More than just segment starts
-      
+
       // Route points include all points (start, intermediate, end)
       const routePointMatches = gpx.match(/<rtept lat=/g);
       expect(routePointMatches).not.toBeNull();
       expect(routePointMatches!.length).toBeGreaterThan(3); // Includes intermediate points
-      
+
       // Check all segment names are present
       expect(gpx).toContain("Day 1 - Segment 1");
       expect(gpx).toContain("Day 1 - Segment 2");
@@ -300,8 +300,3 @@ describe("gpxService", () => {
     });
   });
 });
-
-
-
-
-

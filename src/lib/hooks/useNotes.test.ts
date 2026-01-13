@@ -94,15 +94,12 @@ describe("useNotes", () => {
         await result.current.fetchNotes({ page: 1, limit: 20 });
       });
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        "/api/notes?page=1&limit=20",
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      expect(mockFetch).toHaveBeenCalledWith("/api/notes?page=1&limit=20", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       await waitFor(() => {
         expect(result.current.data).toEqual(mockNotes);
@@ -423,10 +420,7 @@ describe("useNotes", () => {
       });
 
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenLastCalledWith(
-          "/api/notes?page=1&limit=10&search=test",
-          expect.any(Object)
-        );
+        expect(mockFetch).toHaveBeenLastCalledWith("/api/notes?page=1&limit=10&search=test", expect.any(Object));
       });
     });
   });

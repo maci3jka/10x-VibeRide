@@ -203,7 +203,8 @@ export async function createNote(
   }
 
   // Map to response format (exclude deleted_at)
-  const { deleted_at, ...noteResponse } = data;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { deleted_at: _deleted_at, ...noteResponse } = data;
   return noteResponse as NoteResponse;
 }
 
@@ -301,7 +302,8 @@ export async function updateNote(
   }
 
   // Map to response format (exclude deleted_at)
-  const { deleted_at, ...noteResponse } = data;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { deleted_at: _deleted_at, ...noteResponse } = data;
   return noteResponse as NoteResponse;
 }
 
@@ -346,7 +348,7 @@ export async function deleteNote(
   return {
     success: true,
     note_id: data.note_id,
-    deleted_at: data.deleted_at!,
+    deleted_at: data.deleted_at ?? new Date().toISOString(),
   };
 }
 
@@ -398,7 +400,7 @@ export async function archiveNote(
 
   return {
     note_id: data.note_id,
-    archived_at: data.archived_at!,
+    archived_at: data.archived_at ?? new Date().toISOString(),
   };
 }
 

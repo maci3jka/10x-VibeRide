@@ -81,7 +81,13 @@ export interface Note {
  * GeoJSON Geometry Types
  * Based on RFC 7946 GeoJSON specification
  */
-export type GeoJSONGeometryType = "Point" | "LineString" | "Polygon" | "MultiPoint" | "MultiLineString" | "MultiPolygon";
+export type GeoJSONGeometryType =
+  | "Point"
+  | "LineString"
+  | "Polygon"
+  | "MultiPoint"
+  | "MultiLineString"
+  | "MultiPolygon";
 
 /**
  * GeoJSON Point Geometry

@@ -16,7 +16,7 @@ import {
 import type { SupabaseClient } from "../../db/supabase.client";
 
 // Helper to create a mock query builder chain
-const createQueryBuilder = (finalResult: any, isListQuery: boolean = false) => {
+const createQueryBuilder = (finalResult: any, isListQuery = false) => {
   const builder: any = {
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
@@ -976,10 +976,7 @@ describe("itineraryService", () => {
           if (callCount === 1) {
             return createQueryBuilder({ data: mockItinerary, error: null }, false);
           } else {
-            return createQueryBuilder(
-              { data: null, error: { code: "OTHER_ERROR", message: "Database error" } },
-              false
-            );
+            return createQueryBuilder({ data: null, error: { code: "OTHER_ERROR", message: "Database error" } }, false);
           }
         }),
       } as unknown as SupabaseClient;
@@ -1098,10 +1095,21 @@ describe("itineraryService", () => {
         highlights: ["Test highlight"],
       };
 
+      const mockRouteGeoJSON = {
+        type: "FeatureCollection" as const,
+        properties: {
+          title: "Test Itinerary",
+          total_distance_km: 50,
+          total_duration_h: 1.5,
+          highlights: ["Test highlight"],
+        },
+        features: [],
+      };
+
       const mockItinerary = {
         itinerary_id: itineraryId,
         status: "completed",
-        summary_json: mockSummaryJson,
+        route_geojson: mockRouteGeoJSON,
         updated_at: "2024-01-01T00:00:00Z",
       };
 
@@ -1114,10 +1122,10 @@ describe("itineraryService", () => {
       expect(result.itinerary_id).toBe(itineraryId);
       expect(result.status).toBe("completed");
       if (result.status === "completed") {
-        expect(result.summary_json).toEqual(mockSummaryJson);
-        expect(result.summary_json.title).toBe("Test Itinerary");
-        expect(result.summary_json.days).toHaveLength(1);
-        expect(result.summary_json.total_distance_km).toBe(50);
+        expect(result.route_geojson).toEqual(mockRouteGeoJSON);
+        expect(result.route_geojson.properties.title).toBe("Test Itinerary");
+        expect(result.route_geojson.properties.total_distance_km).toBe(50);
+        expect(result.route_geojson.properties.total_duration_h).toBe(1.5);
       }
     });
 
@@ -1204,7 +1212,7 @@ describe("itineraryService", () => {
     });
 
     it("should handle all status variants correctly", async () => {
-      const statuses: Array<"pending" | "running" | "completed" | "failed" | "cancelled"> = [
+      const statuses: ("pending" | "running" | "completed" | "failed" | "cancelled")[] = [
         "pending",
         "running",
         "completed",
@@ -1411,10 +1419,7 @@ describe("itineraryService", () => {
           if (callCount === 1) {
             return createQueryBuilder({ data: mockItinerary, error: null }, false);
           } else {
-            return createQueryBuilder(
-              { data: null, error: { code: "OTHER_ERROR", message: "Database error" } },
-              false
-            );
+            return createQueryBuilder({ data: null, error: { code: "OTHER_ERROR", message: "Database error" } }, false);
           }
         }),
       } as unknown as SupabaseClient;
@@ -1465,4 +1470,3 @@ describe("itineraryService", () => {
     });
   });
 });
-

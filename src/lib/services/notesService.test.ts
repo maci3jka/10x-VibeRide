@@ -4,15 +4,14 @@ import type { SupabaseClient } from "../../db/supabase.client";
 import type { CreateNoteInput, UpdateNoteInput, ListNotesQueryInput } from "../validators/notes";
 
 // Helper to create a mock query builder chain
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 const createQueryBuilder = (finalResult: any, isItinerariesQuery = false) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const builder: any = {
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     is: vi.fn(function (this: any) {
       // For itineraries query, is() is terminal and returns a promise
       // For notes query, is() returns the builder for further chaining

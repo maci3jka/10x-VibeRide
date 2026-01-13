@@ -1,4 +1,4 @@
-import type { RouteGeoJSON, GeoJSONFeature, GeoJSONGeometry } from "../../types";
+import type { RouteGeoJSON } from "../../types";
 import { logger } from "../logger";
 
 /**
@@ -177,9 +177,7 @@ export function validateGeoJSON(geojson: unknown): geojson is RouteGeoJSON {
         }
         const [lon, lat] = coord as number[];
         if (typeof lon !== "number" || typeof lat !== "number") {
-          throw new GeoJSONValidationError(
-            `LineString feature at index ${i}, coordinate ${j} must contain numbers`
-          );
+          throw new GeoJSONValidationError(`LineString feature at index ${i}, coordinate ${j} must contain numbers`);
         }
         if (lon < -180 || lon > 180) {
           throw new GeoJSONValidationError(
@@ -353,7 +351,9 @@ export function geoJsonToGPX(geojson: RouteGeoJSON, options: GPXConversionOption
     if (error instanceof GeoJSONValidationError) {
       throw new GPXConversionError(`Invalid GeoJSON: ${error.message}`);
     }
-    throw new GPXConversionError(`Failed to convert GeoJSON to GPX: ${error instanceof Error ? error.message : String(error)}`);
+    throw new GPXConversionError(
+      `Failed to convert GeoJSON to GPX: ${error instanceof Error ? error.message : String(error)}`
+    );
   }
 }
 
@@ -566,4 +566,3 @@ export function sanitizeFilename(filename: string): string {
     .toLowerCase()
     .slice(0, 100); // Limit length
 }
-

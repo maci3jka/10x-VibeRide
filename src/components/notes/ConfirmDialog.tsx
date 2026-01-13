@@ -55,11 +55,7 @@ export function ConfirmDialog({
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
             Cancel
           </Button>
-          <Button
-            variant={config.isDestructive ? "destructive" : "default"}
-            onClick={onConfirm}
-            disabled={isLoading}
-          >
+          <Button variant={config.isDestructive ? "destructive" : "default"} onClick={onConfirm} disabled={isLoading}>
             {isLoading ? "Processing..." : config.confirmLabel}
           </Button>
         </DialogFooter>
@@ -98,6 +94,3 @@ function getDialogConfig(action: ConfirmAction, noteTitle: string | null) {
       };
   }
 }
-
-
-

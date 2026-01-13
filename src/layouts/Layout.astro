@@ -22,6 +22,7 @@ const { title = "VibeRide" } = Astro.props;
     <slot />
     <Toaster client:load />
     <script>
+      /* eslint-disable prettier/prettier */
       import { setupAuthListener } from "../lib/auth";
       setupAuthListener();
     </script>

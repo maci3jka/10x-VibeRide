@@ -10,7 +10,7 @@ export default function jwtIntegration() {
   return {
     name: "jwt-generator",
     hooks: {
-      "astro:config:setup": ({ command, updateConfig }) => {
+      "astro:config:setup": ({ command }) => {
         // Only run in dev mode
         if (command !== "dev") return;
 

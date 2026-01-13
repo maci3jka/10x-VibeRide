@@ -49,6 +49,3 @@ export function AutosaveIndicator({ state, lastSavedAt }: AutosaveIndicatorProps
 
   return null;
 }
-
-
-

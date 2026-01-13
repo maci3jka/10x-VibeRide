@@ -477,10 +477,7 @@ describe("geojsonService", () => {
               type: "Feature" as const,
               geometry: {
                 type: "LineString" as const,
-                coordinates: [
-                  [-122.4194, 37.7749],
-                  [-122.4084] as any,
-                ],
+                coordinates: [[-122.4194, 37.7749], [-122.4084] as any],
               },
               properties: {},
             },
@@ -498,10 +495,7 @@ describe("geojsonService", () => {
               type: "Feature" as const,
               geometry: {
                 type: "LineString" as const,
-                coordinates: [
-                  [-122.4194, 37.7749],
-                  ["122", 37.7849] as any,
-                ],
+                coordinates: [[-122.4194, 37.7749], ["122", 37.7849] as any],
               },
               properties: {},
             },
@@ -687,7 +681,7 @@ describe("geojsonService", () => {
             },
             properties: {
               name: "Point <A>",
-              description: "Description with & and \"quotes\"",
+              description: 'Description with & and "quotes"',
             },
           },
         ],

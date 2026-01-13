@@ -24,5 +24,5 @@
 
 ## CI/CD and Hosting
 - GitHub Actions
-- DigitalOcean
+- Cloudflare Pages
 - Codecov (coverage reporting)

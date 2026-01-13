@@ -6,14 +6,8 @@ import { z } from "zod";
  */
 export const statsQuerySchema = z
   .object({
-    from: z
-      .string()
-      .datetime({ message: "Invalid ISO 8601 date format for 'from' parameter" })
-      .optional(),
-    to: z
-      .string()
-      .datetime({ message: "Invalid ISO 8601 date format for 'to' parameter" })
-      .optional(),
+    from: z.string().datetime({ message: "Invalid ISO 8601 date format for 'from' parameter" }).optional(),
+    to: z.string().datetime({ message: "Invalid ISO 8601 date format for 'to' parameter" }).optional(),
   })
   .refine(
     (data) => {
@@ -30,4 +24,3 @@ export const statsQuerySchema = z
   );
 
 export type StatsQueryInput = z.infer<typeof statsQuerySchema>;
-

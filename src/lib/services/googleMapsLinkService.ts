@@ -34,14 +34,14 @@ export type GoogleMapsTransportMode = "driving" | "bicycling" | "walking";
 /**
  * Builds a Google Maps URL with route parameters from GeoJSON
  * Uses the Google Maps Directions API URL format
- * 
+ *
  * Algorithm:
  * 1. Extract all coordinates from LineString features (merge multi-day segments)
  * 2. Sample points to stay within maxPoints limit (first + last + evenly-spaced middle)
  * 3. Swap coordinates from [lon, lat] to [lat, lon] (Google requirement)
  * 4. Build URL with origin, destination, and waypoints parameters
  * 5. URL-encode and assemble final Google Maps URL
- * 
+ *
  * @param geojson Valid GeoJSON FeatureCollection with route data
  * @param transport Transport mode (default: "driving")
  * @param maxPoints Maximum number of points (default: 25, Google Maps limit)
@@ -52,7 +52,7 @@ export type GoogleMapsTransportMode = "driving" | "bicycling" | "walking";
 export function buildLink(
   geojson: RouteGeoJSON,
   transport: GoogleMapsTransportMode = "driving",
-  maxPoints: number = 25
+  maxPoints = 25
 ): string {
   try {
     // Step 1: Find all LineString features and merge their coordinates
@@ -64,12 +64,12 @@ export function buildLink(
 
     // Merge all LineString coordinates into a single array
     // For multi-day routes, we have multiple segments that need to be combined
-    let allCoordinates: [number, number][] = [];
-    
+    const allCoordinates: [number, number][] = [];
+
     for (const feature of lineStringFeatures) {
       if (feature.geometry.type === "LineString") {
         const coords = feature.geometry.coordinates;
-        
+
         // If this is not the first segment, skip the first coordinate to avoid duplicates
         // (the last point of previous segment should match the first point of next segment)
         if (allCoordinates.length > 0 && coords.length > 0) {
@@ -101,7 +101,7 @@ export function buildLink(
 
     // Step 4: Build Google Maps URL
     // Format: https://www.google.com/maps/dir/?api=1&origin=lat,lon&destination=lat,lon&waypoints=lat,lon|lat,lon&travelmode=driving
-    
+
     if (swappedPoints.length < 2) {
       throw new LinkGenerationError("Route must have at least 2 points after sampling");
     }
@@ -109,18 +109,18 @@ export function buildLink(
     // First point is origin, last point is destination, middle points are waypoints
     const [startLat, startLon] = swappedPoints[0];
     const [endLat, endLon] = swappedPoints[swappedPoints.length - 1];
-    
+
     // Round to 6 decimal places (~0.1m precision)
     const originCoord = `${startLat.toFixed(6)},${startLon.toFixed(6)}`;
     const destinationCoord = `${endLat.toFixed(6)},${endLon.toFixed(6)}`;
-    
+
     // Build URL parameters
     const params = new URLSearchParams();
     params.set("api", "1");
     params.set("origin", originCoord);
     params.set("destination", destinationCoord);
     params.set("travelmode", transport);
-    
+
     // Add waypoints if there are middle points
     // Google Maps uses pipe (|) separator for waypoints
     if (swappedPoints.length > 2) {
@@ -159,7 +159,7 @@ export function buildLink(
 /**
  * Samples points from a coordinate array to fit within maxPoints limit
  * Always includes first and last point, then evenly spaces middle points
- * 
+ *
  * @param coordinates Array of [lon, lat] coordinates
  * @param maxPoints Maximum number of points to return
  * @returns Sampled array of coordinates
@@ -170,7 +170,7 @@ function samplePoints(coordinates: [number, number][], maxPoints: number): [numb
   }
 
   const sampled: [number, number][] = [];
-  
+
   // Always include first point
   sampled.push(coordinates[0]);
 
@@ -193,4 +193,3 @@ function samplePoints(coordinates: [number, number][], maxPoints: number): [numb
 
   return sampled;
 }
-

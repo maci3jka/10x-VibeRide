@@ -463,4 +463,3 @@ describe("DELETE /api/notes/:noteId", () => {
     expect(body.error).toBe("server_error");
   });
 });
-

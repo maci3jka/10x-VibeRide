@@ -61,4 +61,3 @@ export const downloadGpxQuerySchema = z.object({
 });
 
 export type DownloadGpxQueryInput = z.infer<typeof downloadGpxQuerySchema>;
-

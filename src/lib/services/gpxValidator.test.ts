@@ -82,14 +82,14 @@ describe("gpxValidator", () => {
       const gpx = validGpx.replace('lat="50.0647"', 'lat="91.0"');
       const result = validateGpx(gpx);
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(e => e.includes("Invalid latitude"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("Invalid latitude"))).toBe(true);
     });
 
     it("should reject invalid longitude", () => {
       const gpx = validGpx.replace('lon="19.9450"', 'lon="181.0"');
       const result = validateGpx(gpx);
       expect(result.isValid).toBe(false);
-      expect(result.errors.some(e => e.includes("Invalid longitude"))).toBe(true);
+      expect(result.errors.some((e) => e.includes("Invalid longitude"))).toBe(true);
     });
 
     it("should reject waypoints without lat/lon", () => {
@@ -139,4 +139,3 @@ describe("gpxValidator", () => {
     });
   });
 });
-

@@ -17,7 +17,7 @@ export function EmptyState({ isSearching, onCreateNote }: EmptyStateProps) {
         <FileText className="h-12 w-12 text-muted-foreground mb-4" />
         <h3 className="text-lg font-semibold mb-2">No notes found</h3>
         <p className="text-sm text-muted-foreground max-w-md">
-          Try adjusting your search or filters to find what you're looking for.
+          Try adjusting your search or filters to find what you&apos;re looking for.
         </p>
       </div>
     );
@@ -28,7 +28,8 @@ export function EmptyState({ isSearching, onCreateNote }: EmptyStateProps) {
       <FileText className="h-12 w-12 text-muted-foreground mb-4" />
       <h3 className="text-lg font-semibold mb-2">No notes yet</h3>
       <p className="text-sm text-muted-foreground mb-6 max-w-md">
-        Start your journey by creating your first trip note. Describe where you want to ride, and we'll help you create an amazing itinerary.
+        Start your journey by creating your first trip note. Describe where you want to ride, and we&apos;ll help you
+        create an amazing itinerary.
       </p>
       <Button onClick={onCreateNote} className="gap-2">
         <Plus className="h-4 w-4" />
@@ -37,6 +38,3 @@ export function EmptyState({ isSearching, onCreateNote }: EmptyStateProps) {
     </div>
   );
 }
-
-
-

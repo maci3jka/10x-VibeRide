@@ -2,12 +2,12 @@ import type { APIRoute } from "astro";
 
 /**
  * Sign Out Endpoint
- * 
+ *
  * POST /api/auth/signout
  * Clears user session and signs out from Supabase
- * 
+ *
  * Auth: Required (must have active session)
- * 
+ *
  * Response (Success): 200 OK
  * Response (Error): 401 Unauthorized, 500 Internal Server Error
  */
@@ -21,7 +21,7 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
         error: "unauthorized",
         message: "No active session to sign out.",
       }),
-      { status: 401, headers: { "Content-Type": "application/json" } },
+      { status: 401, headers: { "Content-Type": "application/json" } }
     );
   }
 
@@ -36,7 +36,7 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
           error: "signout_failed",
           message: "Failed to sign out. Please try again.",
         }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
+        { status: 500, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -51,7 +51,7 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
         success: true,
         message: "Signed out successfully",
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+      { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (err) {
     console.error("Unexpected sign out error:", err, { userId: user.id });
@@ -60,16 +60,10 @@ export const POST: APIRoute = async ({ locals, cookies }) => {
         error: "server_error",
         message: "An unexpected error occurred.",
       }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 };
 
 // Disable prerendering for this API route
 export const prerender = false;
-
-
-
-
-
-

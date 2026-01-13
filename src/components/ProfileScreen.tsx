@@ -17,7 +17,7 @@ import type { UserPreferencesResponse } from "@/types";
  * Handles data fetching, validation, mutations, and user feedback
  */
 export function ProfileScreen() {
-  const { form, errors, status, apiError, updateField, isDirty, save, validate, reset, serverData } = useProfileState();
+  const { form, errors, status, apiError, updateField, isDirty, save, validate, reset } = useProfileState();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [conflictData, setConflictData] = useState<UserPreferencesResponse | null>(null);
   const [isOnline, setIsOnline] = useState(true);
@@ -140,15 +140,9 @@ export function ProfileScreen() {
                 <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
                   <div className="space-y-1">
                     <p className="text-sm font-medium">Sign Out</p>
-                    <p className="text-sm text-muted-foreground">
-                      Sign out of your account
-                    </p>
+                    <p className="text-sm text-muted-foreground">Sign out of your account</p>
                   </div>
-                  <Button
-                    variant="destructive"
-                    onClick={() => setShowSignOutDialog(true)}
-                    className="gap-2"
-                  >
+                  <Button variant="destructive" onClick={() => setShowSignOutDialog(true)} className="gap-2">
                     <LogOut className="h-4 w-4" />
                     Sign Out
                   </Button>

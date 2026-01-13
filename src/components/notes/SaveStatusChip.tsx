@@ -25,7 +25,11 @@ export function SaveStatusChip({ state }: SaveStatusChipProps) {
 
   if (state === "saved") {
     return (
-      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-500" role="status" aria-live="polite">
+      <div
+        className="flex items-center gap-2 text-sm text-green-600 dark:text-green-500"
+        role="status"
+        aria-live="polite"
+      >
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         <span>Saved</span>
       </div>
@@ -43,6 +47,3 @@ export function SaveStatusChip({ state }: SaveStatusChipProps) {
 
   return null;
 }
-
-
-

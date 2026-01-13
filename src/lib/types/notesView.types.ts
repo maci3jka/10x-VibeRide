@@ -51,6 +51,3 @@ export interface ConfirmDialogState {
   noteId: string | null;
   noteTitle: string | null;
 }
-
-
-

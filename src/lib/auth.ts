@@ -29,7 +29,7 @@ export async function signInWithGoogle(redirectTo?: string) {
  * Handles sign-out and token refresh events
  */
 export function setupAuthListener() {
-  supabaseClient.auth.onAuthStateChange((event, session) => {
+  supabaseClient.auth.onAuthStateChange((event) => {
     if (event === "SIGNED_OUT") {
       window.location.href = "/";
     } else if (event === "TOKEN_REFRESHED") {
@@ -54,9 +54,3 @@ export async function refreshSession() {
 
   return data.session;
 }
-
-
-
-
-
-

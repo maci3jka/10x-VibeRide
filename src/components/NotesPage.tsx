@@ -44,27 +44,10 @@ export function NotesPage() {
     noteId: null,
     noteTitle: null,
   });
-  const [isOnline, setIsOnline] = useState(true);
 
   // Data fetching and mutations
-  const { data, pagination, error, isFetching, hasNextPage, fetchNotes, fetchNextPage, refetch } = useNotes();
+  const { data, error, isFetching, hasNextPage, fetchNotes, fetchNextPage, refetch } = useNotes();
   const { archiveNote, unarchiveNote, deleteNote, isMutating, error: mutationError } = useNoteMutations();
-
-  // Monitor online status
-  useEffect(() => {
-    setIsOnline(navigator.onLine);
-
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
 
   // Initial fetch
   useEffect(() => {
@@ -272,4 +255,3 @@ export function NotesPage() {
     </>
   );
 }
-

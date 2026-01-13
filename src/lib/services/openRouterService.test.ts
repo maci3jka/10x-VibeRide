@@ -365,7 +365,6 @@ describe("OpenRouterService", () => {
       };
 
       await expect(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _chunk of service.chatStream(params)) {
           // Should not reach here
         }
@@ -387,7 +386,6 @@ describe("OpenRouterService", () => {
       };
 
       await expect(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _chunk of service.chatStream(params)) {
           // Should not reach here
         }
@@ -470,7 +468,6 @@ describe("OpenRouterService", () => {
       };
 
       await expect(async () => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for await (const _chunk of service.chatStream(params)) {
           // Should not reach here
         }

@@ -72,7 +72,7 @@ export function InfiniteScrollList<T>({
   return (
     <div className={className}>
       {/* List items */}
-      <ul role="list" className="space-y-3">
+      <ul className="space-y-3">
         {items.map((item, index) => (
           <li key={index}>{renderItem(item, index)}</li>
         ))}
@@ -86,9 +86,7 @@ export function InfiniteScrollList<T>({
       )}
 
       {/* Sentinel element for intersection observer */}
-      {hasMore && !isLoading && (
-        <div ref={sentinelRef} className="h-4" aria-hidden="true" />
-      )}
+      {hasMore && !isLoading && <div ref={sentinelRef} className="h-4" aria-hidden="true" />}
 
       {/* End of list indicator */}
       {!hasMore && items.length > 0 && (
@@ -99,4 +97,3 @@ export function InfiniteScrollList<T>({
     </div>
   );
 }
-

@@ -5,12 +5,7 @@
 export function SpinnerWheel() {
   return (
     <div className="relative w-24 h-24" role="status" aria-label="Loading">
-      <svg
-        viewBox="0 0 140 140"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-        className="w-full h-full"
-      >
+      <svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" className="w-full h-full">
         {/* Animated twisty road path */}
         <path
           d="M 10 70 Q 35 40, 70 70 T 130 70"
@@ -20,15 +15,9 @@ export function SpinnerWheel() {
           className="text-primary/20"
           strokeDasharray="8,6"
         >
-          <animate
-            attributeName="stroke-dashoffset"
-            from="0"
-            to="14"
-            dur="0.6s"
-            repeatCount="indefinite"
-          />
+          <animate attributeName="stroke-dashoffset" from="0" to="14" dur="0.6s" repeatCount="indefinite" />
         </path>
-        
+
         {/* Motorcycle group - animated along path */}
         <g className="text-primary">
           {/* Animate motorcycle moving and tilting */}
@@ -39,7 +28,7 @@ export function SpinnerWheel() {
             dur="4s"
             repeatCount="indefinite"
           />
-          
+
           {/* Rear wheel with spokes */}
           <g>
             <circle cx="0" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
@@ -56,7 +45,7 @@ export function SpinnerWheel() {
               repeatCount="indefinite"
             />
           </g>
-          
+
           {/* Front wheel with spokes */}
           <g>
             <circle cx="28" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
@@ -73,58 +62,27 @@ export function SpinnerWheel() {
               repeatCount="indefinite"
             />
           </g>
-          
+
           {/* Motorcycle frame and body */}
           <g strokeLinecap="round" strokeLinejoin="round">
             {/* Rear suspension/swingarm */}
-            <path
-              d="M 0 12 L 4 8"
-              stroke="currentColor"
-              strokeWidth="2"
-              fill="none"
-            />
-            
+            <path d="M 0 12 L 4 8" stroke="currentColor" strokeWidth="2" fill="none" />
+
             {/* Main frame */}
-            <path
-              d="M 4 8 L 10 2 L 18 2 L 24 6"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              fill="none"
-            />
-            
+            <path d="M 4 8 L 10 2 L 18 2 L 24 6" stroke="currentColor" strokeWidth="2.5" fill="none" />
+
             {/* Fuel tank */}
-            <ellipse
-              cx="12"
-              cy="3"
-              rx="5"
-              ry="3"
-              fill="currentColor"
-              className="opacity-80"
-            />
-            
+            <ellipse cx="12" cy="3" rx="5" ry="3" fill="currentColor" className="opacity-80" />
+
             {/* Seat */}
-            <path
-              d="M 8 4 Q 10 2, 14 2 Q 16 2, 16 4 L 14 6 L 10 6 Z"
-              fill="currentColor"
-              className="opacity-70"
-            />
-            
+            <path d="M 8 4 Q 10 2, 14 2 Q 16 2, 16 4 L 14 6 L 10 6 Z" fill="currentColor" className="opacity-70" />
+
             {/* Front fork */}
-            <path
-              d="M 18 2 L 28 12"
-              stroke="currentColor"
-              strokeWidth="2"
-              fill="none"
-            />
-            
+            <path d="M 18 2 L 28 12" stroke="currentColor" strokeWidth="2" fill="none" />
+
             {/* Handlebars */}
-            <path
-              d="M 16 0 L 20 0"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-            
+            <path d="M 16 0 L 20 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+
             {/* Exhaust */}
             <path
               d="M 2 10 L 8 10 Q 10 10, 10 8"
@@ -134,24 +92,19 @@ export function SpinnerWheel() {
               className="opacity-60"
             />
           </g>
-          
+
           {/* Rider - more prominent */}
           <g>
             {/* Helmet - larger and more visible */}
             <circle cx="12" cy="-4" r="4" fill="currentColor" />
             <ellipse cx="13.5" cy="-4" rx="2" ry="1.5" fill="currentColor" className="opacity-30" />
-            
+
             {/* Neck */}
             <rect x="11" y="0" width="2" height="2" fill="currentColor" />
-            
+
             {/* Body/Torso - thicker and more defined */}
-            <path
-              d="M 12 2 L 12 8"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            
+            <path d="M 12 2 L 12 8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+
             {/* Shoulders and arms reaching to handlebars */}
             <path
               d="M 8 3 L 12 3 L 16 3 L 18 1"
@@ -160,7 +113,7 @@ export function SpinnerWheel() {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            
+
             {/* Legs on foot pegs - more defined */}
             <path
               d="M 12 8 L 10 11 L 9 13 M 12 8 L 14 11 L 15 13"
@@ -169,17 +122,11 @@ export function SpinnerWheel() {
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            
+
             {/* Back detail for depth */}
-            <path
-              d="M 10 4 Q 12 6, 14 4"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              fill="none"
-              className="opacity-50"
-            />
+            <path d="M 10 4 Q 12 6, 14 4" stroke="currentColor" strokeWidth="1.5" fill="none" className="opacity-50" />
           </g>
-          
+
           {/* Lean animation */}
           <animateTransform
             attributeName="transform"
@@ -190,7 +137,7 @@ export function SpinnerWheel() {
             additive="sum"
           />
         </g>
-        
+
         {/* Speed lines for motion effect */}
         <g className="text-primary/30">
           <line x1="0" y1="62" x2="20" y2="62" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -214,4 +161,3 @@ export function SpinnerWheel() {
     </div>
   );
 }
-

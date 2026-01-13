@@ -19,6 +19,12 @@ export default defineConfig({
       host: true, // Allow external connections (ngrok, etc.)
       allowedHosts: ["peppercorny-strangledly-lina.ngrok-free.dev"],
     },
+    optimizeDeps: {
+      include: ["react", "react-dom", "sonner"],
+    },
+    ssr: {
+      noExternal: ["sonner"],
+    },
   },
   adapter: node({
     mode: "standalone",
