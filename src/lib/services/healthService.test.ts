@@ -15,11 +15,11 @@ vi.mock("../logger", () => ({
 // Check if running in CI environment
 // GitHub Actions sets GITHUB_ACTIONS=true automatically
 // We also check for CI=true which we set explicitly in the workflow
-const isCI = true; // TODO: remove this
-// process.env.CI === "true" ||
-// process.env.GITHUB_ACTIONS === "true" ||
-// process.env.CI === "1" ||
-// Boolean(process.env.CI);
+const isCI =
+  process.env.CI === "true" ||
+  process.env.GITHUB_ACTIONS === "true" ||
+  process.env.CI === "1" ||
+  Boolean(process.env.CI);
 
 describe("healthService", () => {
   describe("check", () => {
