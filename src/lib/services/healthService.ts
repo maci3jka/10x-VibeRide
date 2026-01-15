@@ -19,10 +19,10 @@ const HEALTH_CHECK_TIMEOUT = 50;
  * @returns Promise resolving to connection status
  */
 async function pingDatabase(supabase: SupabaseClient): Promise<"connected" | "disconnected" | "error"> {
-  try {
-    let timeoutId: NodeJS.Timeout | undefined;
-    let isResolved = false;
+  let timeoutId: NodeJS.Timeout | undefined;
+  let isResolved = false;
 
+  try {
     // Create a timeout promise that respects resolution state
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
@@ -49,6 +49,10 @@ async function pingDatabase(supabase: SupabaseClient): Promise<"connected" | "di
 
     return "connected";
   } catch (err) {
+    // Ensure timeout is cleared even on exception
+    isResolved = true;
+    if (timeoutId) clearTimeout(timeoutId);
+
     const errorMsg = err instanceof Error ? err.message : String(err);
     logger.error({ err, errorMessage: errorMsg }, "Database health check exception");
 
@@ -67,10 +71,10 @@ async function pingDatabase(supabase: SupabaseClient): Promise<"connected" | "di
  * @returns Promise resolving to auth status
  */
 async function pingAuth(supabase: SupabaseClient): Promise<"operational" | "degraded" | "down"> {
-  try {
-    let timeoutId: NodeJS.Timeout | undefined;
-    let isResolved = false;
+  let timeoutId: NodeJS.Timeout | undefined;
+  let isResolved = false;
 
+  try {
     // Create a timeout promise that respects resolution state
     const timeoutPromise = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
@@ -100,6 +104,10 @@ async function pingAuth(supabase: SupabaseClient): Promise<"operational" | "degr
 
     return "operational";
   } catch (err) {
+    // Ensure timeout is cleared even on exception
+    isResolved = true;
+    if (timeoutId) clearTimeout(timeoutId);
+
     const errorMsg = err instanceof Error ? err.message : String(err);
     logger.error({ err, errorMessage: errorMsg }, "Auth health check exception");
 
