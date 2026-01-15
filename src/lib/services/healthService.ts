@@ -21,10 +21,15 @@ const HEALTH_CHECK_TIMEOUT = 50;
 async function pingDatabase(supabase: SupabaseClient): Promise<"connected" | "disconnected" | "error"> {
   try {
     let timeoutId: NodeJS.Timeout | undefined;
+    let isResolved = false;
 
-    // Create a timeout promise that can be cancelled
+    // Create a timeout promise that respects resolution state
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error("Database ping timeout")), HEALTH_CHECK_TIMEOUT);
+      timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          reject(new Error("Database ping timeout"));
+        }
+      }, HEALTH_CHECK_TIMEOUT);
     });
 
     // Perform lightweight head-only query to check DB connectivity
@@ -33,7 +38,8 @@ async function pingDatabase(supabase: SupabaseClient): Promise<"connected" | "di
     // Race between query and timeout
     const { error } = await Promise.race([queryPromise, timeoutPromise]);
 
-    // Clear timeout to prevent unhandled rejection
+    // Mark as resolved and clear timeout
+    isResolved = true;
     if (timeoutId) clearTimeout(timeoutId);
 
     if (error) {
@@ -63,10 +69,15 @@ async function pingDatabase(supabase: SupabaseClient): Promise<"connected" | "di
 async function pingAuth(supabase: SupabaseClient): Promise<"operational" | "degraded" | "down"> {
   try {
     let timeoutId: NodeJS.Timeout | undefined;
+    let isResolved = false;
 
-    // Create a timeout promise that can be cancelled
+    // Create a timeout promise that respects resolution state
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error("Auth ping timeout")), HEALTH_CHECK_TIMEOUT);
+      timeoutId = setTimeout(() => {
+        if (!isResolved) {
+          reject(new Error("Auth ping timeout"));
+        }
+      }, HEALTH_CHECK_TIMEOUT);
     });
 
     // Perform lightweight auth check - list users with minimal results
@@ -78,7 +89,8 @@ async function pingAuth(supabase: SupabaseClient): Promise<"operational" | "degr
     // Race between query and timeout
     const { error } = await Promise.race([queryPromise, timeoutPromise]);
 
-    // Clear timeout to prevent unhandled rejection
+    // Mark as resolved and clear timeout
+    isResolved = true;
     if (timeoutId) clearTimeout(timeoutId);
 
     if (error) {

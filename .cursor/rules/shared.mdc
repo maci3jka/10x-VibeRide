@@ -19,6 +19,26 @@ Be direct and concise. Skip enthusiasm and validation. If my reasoning has clear
 - Tailwind 4
 - Shadcn/ui
 
+## GitHub Integration
+
+GitHub MCP server is available and configured for this repository (`maci3jka/10x-VibeRide`). Use it for:
+- Creating and managing issues
+- Creating and managing pull requests
+- Searching code, issues, and PRs
+- Managing branches
+- Reading and updating files in the repository
+
+## Supabase Integration
+
+Supabase MCP server is available and configured for local development (`http://127.0.0.1:54321`). Use it for:
+- Listing and managing database tables
+- Executing SQL queries
+- Applying migrations
+- Managing database extensions
+- Getting project configuration (URL, anon key)
+- Generating TypeScript types from database schema
+- Viewing logs and advisors for security/performance
+
 ## Project Structure
 
 When introducing changes to the project, always follow the directory structure below:
