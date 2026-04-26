@@ -15,6 +15,18 @@ export default defineConfig({
   // server: { port: 3000 },
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      // Feature flag environment variables
+      "import.meta.env.ENV_NAME": JSON.stringify(
+        process.env.ENV_NAME || "local"
+      ),
+      "import.meta.env.FEATURE_FLAG_AUTH": JSON.stringify(
+        process.env.FEATURE_FLAG_AUTH
+      ),
+      "import.meta.env.FEATURE_FLAG_COLLECTIONS": JSON.stringify(
+        process.env.FEATURE_FLAG_COLLECTIONS
+      ),
+    },
     server: {
       host: true, // Allow external connections (ngrok, etc.)
       allowedHosts: ["peppercorny-strangledly-lina.ngrok-free.dev"],

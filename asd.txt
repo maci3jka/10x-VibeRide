@@ -1,0 +1,53 @@
+March 15 – Beijing, China
+March 22 – Rio de Janeiro, Brazil
+March 29 – Guadalajara, Mexico
+April 24 – Budapest, Hungary
+April 26 – Chennai, India
+April 28 – Auckland, New Zealand
+May 3 – Heredia, Costa Rica
+May 6 – Helsinki, Finland
+May 8 – San Francisco, USA
+May 15 – Austin, USA
+May 22 – Seoul, South Korea
+May 23 – Istanbul, Turkey
+In June – New York, USA
+July 3 – Utrecht, The Netherlands
+June 5 – Bratislava, Slovakia	June 6 – Bangalore, India
+June 14 – Antigua Guatemala, Guatemala 
+June 19 – Nigeria, Africa
+July 5 – Taipei, Taiwan
+July 19 – Lima, Perú
+August 29 – Bogota, Colombia
+September 16 – Washington DC, USA 
+September 18 – Sofia, Bulgaria
+September 20 – San Salvador, El Salvador
+October 3 – Warsaw, Poland
+October 8 – Colombo, Sri Lanka
+October 21 – Edinburgh, UK
+3rd fiscal quarter – Hangzhou, China
+November 3-4 – Porto, Portugal
+December 5 – Geneva, Switzerland
+
+
+:9000/plan
+:9001/plan <= main instacji 9001 (main=test)
+
+9000/plan <= prod [main qaps]  (main=prod)
+9000/test/plan <=test [env qaps]
+9000/<env>/plan <=test [env qaps]
+
+{
+    logs
+    root_env=prod
+    envs = {
+        test= {
+            incoming_dir = C/..../test
+            simulation_url= nexelem_stage....
+            root=true
+        },
+        test= {
+            incoming_dir = C/..../test
+            simulation_url= nexelem_stage....
+        }
+    }
+}
