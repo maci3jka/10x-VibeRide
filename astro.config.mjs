@@ -8,6 +8,8 @@ import node from "@astrojs/node";
 import jwtIntegration from "./scripts/jwt-integration.mjs";
 import envCheckIntegration from "./scripts/env-check.mjs";
 
+import cloudflare from "@astrojs/cloudflare";
+
 // https://astro.build/config
 export default defineConfig({
   output: "server",
@@ -38,7 +40,5 @@ export default defineConfig({
       noExternal: ["sonner"],
     },
   },
-  adapter: node({
-    mode: "standalone",
-  }),
+  adapter: cloudflare(),
 });
